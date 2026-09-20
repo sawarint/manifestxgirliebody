@@ -299,6 +299,16 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}.ob-step.on,.sheet-body{animation:none}}
 .ver{text-align:center;margin-top:24px}
+.hm{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px}
+.hm i{aspect-ratio:1;border-radius:7px;background:rgb(from var(--ink) r g b / var(--o))}
+@supports not (color:rgb(from red r g b)){.hm i{background:var(--ink);opacity:var(--o)}}
+.hm i.no{background:none;border:1.5px dashed var(--line);opacity:1}
+.focus{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;background:var(--pink);border-radius:18px;padding:12px 16px;margin-bottom:14px}
+.focus span{grid-column:1/3;font-size:12px;color:var(--muted)}
+.focus b{font-weight:600;font-size:15px}
+.focus em{font-style:normal;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.focus em.ok{color:var(--ink);font-weight:600}
+
 </style>
 </head>
 <body>
@@ -308,6 +318,7 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
     <div class="hello" id="hello"></div>
     <div class="hero" id="hero"></div>
     <div class="mf" id="manifest"></div>
+    <div class="focus hidden" id="focusBar"></div>
     <div class="panel"><div class="cardhead"><h2>เช็กลิสต์วันนี้</h2><b id="todoCount"></b></div><div id="todo"></div></div>
     <div class="panel"><div class="cardhead"><h2>น้ำ 💧</h2><b id="waterCount"></b></div><div class="glasses" id="water"></div></div>
     <div class="panel"><div class="cardhead"><h2>โปรตีนวันนี้</h2><b id="protCount"></b></div><div class="pills" id="protToday"></div></div>
@@ -336,8 +347,6 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
         <ol class="timeline" id="daily"></ol>
         <h3>รายสัปดาห์</h3>
         <ul class="plan" id="weekly"></ul>
-        <h3>รายเดือน</h3>
-        <ul class="plan" id="monthly"></ul>
       </div>
       <div class="panel" id="pProtein">
         <h2>โปรตีนต่อวัน</h2>
@@ -382,11 +391,6 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
       <div class="row"><button class="btn block" id="analyzeSimple">ดูผลสัปดาห์นี้ ✨</button></div>
       <details style="margin-top:18px">
         <summary>มี Shortcut ส่งข้อมูลจาก Health แล้ว</summary>
-        <div class="row">
-          <button class="btn ghost" id="sampleOk">ตัวอย่าง: สัปดาห์ปกติ</button>
-          <button class="btn ghost" id="sampleStall">ตัวอย่าง: น้ำหนักนิ่ง</button>
-          <button class="btn ghost" id="sampleFast">ตัวอย่าง: ลดเร็วเกินไป</button>
-        </div>
         <label style="margin-top:14px">ข้อมูลจาก Shortcut<textarea id="healthIn" spellcheck="false"></textarea></label>
         <div class="row"><button class="btn ghost" id="analyze">ปรับแผนจากข้อมูลนี้</button></div>
       </details>
@@ -396,6 +400,12 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
     <div class="panel hidden" id="histPanel">
       <h2>เส้นทางของเธอ</h2>
       <div id="hist"></div>
+    </div>
+    <div class="panel" id="monthPanel">
+      <h2>ภาพรวมรายเดือน</h2>
+      <p class="legend">สรุปทุก 4 สัปดาห์ ดูความสม่ำเสมอทั้งเดือน วัดรอบเอว และเลือกโฟกัสของเดือนหน้า</p>
+      <button class="btn ghost block" id="openMonth" style="margin-top:6px">ดูภาพรวม 4 สัปดาห์ล่าสุด</button>
+      <div id="monthList" style="margin-top:10px"></div>
     </div>
   </section>
 
@@ -409,7 +419,7 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
       <button id="resetAll" class="danger">ล้างข้อมูลทั้งหมด</button>
     </div>
   </section>
-  <p class="legend ver">เวอร์ชัน 10</p>
+  <p class="legend ver">เวอร์ชัน 11</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>วันนี้</button>
@@ -484,7 +494,7 @@ const KEY = "ldtd-demo-v1";
 let state = { profile:null, adj:{kcal:0, steps:0}, history:[] };
 
 function load(){ try{ const s = localStorage.getItem(KEY); if(s) state = Object.assign(state, JSON.parse(s)); }catch(e){}
-  if(state.profile){ state.profile=Object.assign({equip:0,mins:45,exp:"some",flags:["balance"]},state.profile); if(!state.profile.planWeight) state.profile.planWeight=state.profile.startWeight||state.profile.weight; } }
+  if(state.profile){ state.profile=Object.assign({equip:0,mins:45,exp:"some",flags:["balance"]},state.profile); if(!state.profile.planWeight) state.profile.planWeight=state.profile.startWeight||state.profile.weight; if(!state.profile.created) state.profile.created=Date.now(); } }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display="none",2600); }
 
@@ -715,7 +725,7 @@ function render(){
   const today=new Date(); let w=p.weight; const mo=[];
   for(let i=1;i<=3;i++){ for(let k=0;k<4;k++) w*=0.9925; const kg=Math.max(Math.round(w*10)/10,p.goal);
     mo.push(`<li><time>ด.${i}</time><div><strong>ค่าเฉลี่ยประมาณ ${kg} kg</strong><br><span class="legend">ภายใน ${fmt(addDays(today,i*28))} ถ้าลดตามแผนกลาง ๆ</span></div></li>`); }
-  $("#monthly").innerHTML=mo.join("");
+  if($("#monthly")) $("#monthly").innerHTML=mo.join("");
   renderWorkout(p); renderExport(p,c); renderProtein(p,c);
 }
 
@@ -790,9 +800,6 @@ function sample(kind){
   };
   $("#healthIn").value=JSON.stringify(data,null,1);
 }
-$("#sampleOk").addEventListener("click",()=>sample("ok"));
-$("#sampleStall").addEventListener("click",()=>sample("stall"));
-$("#sampleFast").addEventListener("click",()=>sample("fast"));
 const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
 
 /* chips 0-7 */
@@ -872,7 +879,7 @@ function runAnalysis({cur,prev,prevPct,pass,note,sleepHours,steps,lifts}){
   if(c1.steps!==c0.steps) changes.push({k:"steps",from:f(c0.steps),to:f(c1.steps)});
   if(c1.water!==c0.water) changes.push({k:"water",from:(c0.water/1000).toFixed(1),to:(c1.water/1000).toFixed(1)});
   if(days0.length!==p.days.length) changes.push({k:"days",from:days0.length,to:p.days.length});
-  const r={week:state.history.length+1,date:new Date().toISOString().slice(0,10),prevAvg:Math.round(prev*10)/10,avg:p.weight,
+  const r={week:state.history.length+1,date:dkey(),prevAvg:Math.round(prev*10)/10,avg:p.weight,
     pct:+pct.toFixed(2),pass,lifts:lifts??null,planned,key,trail,train,insight,changes,reached,ms:msBefore,
     next:milestones(p)[0].kg,start:p.startWeight,goal:p.goal,note:note||""};
   state.history.push(r); save(); render(); renderHist();
@@ -908,7 +915,7 @@ function reportHTML(r,fresh){
     ${r.key==="fast"?`<div class="note">${TX.warn}</div>`:""}
     ${r.note?`<p class="legend">${TX.noteLabel}: ${esc(r.note)}</p>`:""}`;
   if(fresh) h+=`<div class="note">${r.changes.length?TX.reimport:TX.keepCal}</div>
-    <div class="row"><button class="btn" id="goPlan">${r.changes.length?TX.seePlanNew:TX.seePlan}</button><button class="btn ghost" id="shareWeek">${UI.shareCard}</button></div>`;
+    <div class="row"><button class="btn" id="goPlan">${r.changes.length?TX.seePlanNew:TX.seePlan}</button><button class="btn ghost" id="shareWeek">${UI.shareCard}</button>${r.week%4===0?`<button class="btn ghost" data-open-month>${MX.open}</button>`:""}</div>`;
   return h+`</div>`;
 }
 function trendSVG(){
@@ -940,6 +947,7 @@ $("#analyzeSimple").addEventListener("click",()=>{
   const prev= last?last.avg:state.profile.weight;
   if(Math.abs(prev-cur)>5){ $("#err3").textContent=`ตัวเลขต่างจากครั้งก่อน (${prev} kg) เกิน 5 kg ตรวจอีกครั้งว่าเป็นค่าเฉลี่ยของสัปดาห์`; return; }
   runAnalysis({cur, prev, prevPct:last?last.pct:null, pass:passSel, lifts:liftSel, note:$("#noteIn").value.trim()});
+  passSel=null; liftSel=null; document.querySelectorAll("#passChips button,#liftChips button").forEach(b=>b.setAttribute("aria-pressed","false"));
   $("#avgIn").value=""; $("#noteIn").value="";
 });
 
@@ -995,6 +1003,7 @@ document.addEventListener("click",e=>{
   if(e.target.closest("[data-open-ob]")) openOb();
   const j=e.target.closest("[data-j]"); if(j){ const el=document.getElementById(j.dataset.j); if(el) el.scrollIntoView({behavior:"smooth",block:"start"}); }
   if(e.target.closest("#shareWeek")) openShare(state.history[state.history.length-1]);
+  if(e.target.closest("[data-open-month]")) openMonth();
 });
 
 /* ---------- onboarding ---------- */
@@ -1068,6 +1077,9 @@ function renderToday(){
       <div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i); return `<button class="todo ${on?"on":""}" data-ex="${i}" aria-pressed="${on}"><span class="ck"></span><span class="tt"><b>${e.name}</b></span><time>${e.dose}</time></button>`; }).join("")}</div>`; }
   else { d.exN=0; const t=wp.cardio[code]||""; const walk=t.startsWith("เดิน")||t.startsWith("Brisk");
     $("#wkToday").innerHTML=`<div class="cardhead"><h2>${UI.cardioToday}</h2></div><p class="legend">${t}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${walk?UI.walkBtn:UI.restBtn}</b></span></button></div>`; }
+  const fs=focusStatus(d,!!lift);
+  $("#focusBar").classList.toggle("hidden",!fs);
+  if(fs) $("#focusBar").innerHTML=`<span>${MX.focusBar}</span><b>${fs.label}</b><em class="${fs.done?"ok":""}">${fs.state}</em>`;
   $("#moods").innerHTML=UI.moods.map(m=>`<button data-mood="${m}" aria-pressed="${d.mood===m}">${m}</button>`).join("");
   if(document.activeElement!==$("#dayNote")) $("#dayNote").value=d.note||"";
   save();
@@ -1107,7 +1119,7 @@ function badgeState(){
 function checkBadges(){
   const e=badgeState(); state.badges=state.badges||[];
   const nw=BADGES.filter(([k])=>e[k]&&!state.badges.includes(k)); if(!nw.length) return;
-  nw.forEach(([k])=>state.badges.push(k)); save();
+  state.badgeAt=state.badgeAt||{}; nw.forEach(([k])=>{ state.badges.push(k); state.badgeAt[k]=dkey(); }); save();
   const [k,ic]=nw[0];
   setTimeout(()=>openSheet(`<div class="sticker big">${ic}</div><h2>${UI.newSticker}</h2><p><b>${UI.bname[k]}</b><br><span class="legend">${UI.bdesc[k]}</span></p><div class="row"><button class="btn" data-close>${UI.yay}</button></div>`),500);
 }
@@ -1127,9 +1139,9 @@ async function openShare(r){
   const H='"Anuphan", sans-serif', B='"Anuphan", sans-serif', ink="#161514", rose="#161514";
   x.textAlign="left"; x.fillStyle=rose; x.font=`700 64px ${H}`; x.fillText("ลดทีละด่าน.",96,200);
   x.font=`400 110px ${H}`; x.fillText("✦",96,380);
-  x.fillStyle=ink; x.font=`700 150px ${H}`; x.fillText(r&&r.week?UI.cardWeek(r.week):UI.cardDay(dayNumber(p)),96,580);
+  x.fillStyle=ink; x.font=`700 150px ${H}`; x.fillText(r&&r.title?r.title:r&&r.week?UI.cardWeek(r.week):UI.cardDay(dayNumber(p)),96,580);
   const lost=Math.max(0,Math.round((p.startWeight-p.weight)*10)/10), st=streakInfo(), d=day();
-  const rows=[[UI.cardLost,lost>0?`${lost} kg`:UI.justStarted],[UI.cardStreak,`${st.cur} ${UI.days} 🔥`],
+  const rows=r&&r.rows?r.rows:[[UI.cardLost,lost>0?`${lost} kg`:UI.justStarted],[UI.cardStreak,`${st.cur} ${UI.days} 🔥`],
     r&&r.week?[UI.cardWeekCheck,`${r.pass}/7`]:[UI.cardCheck,`${d.done.length}/${d.n||0}`], r&&r.avg?[UI.cardAvg,`${r.avg} kg`]:null].filter(Boolean);
   let y=760;
   rows.forEach(([k,v])=>{ x.fillStyle="rgba(251,248,242,.85)"; x.beginPath(); x.roundRect(80,y-90,920,170,48); x.fill();
@@ -1165,8 +1177,97 @@ $("#editProfile").addEventListener("click",openOb);
 $("#shareMe").addEventListener("click",()=>openShare());
 $("#resetAll").addEventListener("click",()=>{ if(confirm(UI.resetQ)){ try{ localStorage.removeItem(KEY); }catch(e){} location.reload(); } });
 
+/* ---------- monthly recap ---------- */
+const MX={
+ title:n=>n?`เดือนที่ ${n}`:"4 สัปดาห์ล่าสุด", lost:(a)=>`ค่าเฉลี่ยลดไป ${a} kg ในเดือนนี้`, steady:(c)=>`ติ๊กเช็กลิสต์ได้ ${c} จาก 28 วัน`,
+ avg:"ค่าเฉลี่ยน้ำหนัก", best:"ต่อเนื่องยาวสุด", lift:"เล่นเวท", water:"น้ำครบ", prot:"โปรตีนครบ", notes:"จดโน้ต", dayU:"วัน",
+ hmTitle:"ความสม่ำเสมอ", statTitle:"เดือนนี้", moodTitle:"อารมณ์ของเดือน", stTitle:"สติกเกอร์ที่ได้เดือนนี้", noSt:"เดือนนี้ยังไม่มีสติกเกอร์ใหม่ เดือนหน้าลุยต่อ",
+ moodTop:(m,n)=>`รู้สึก ${m} บ่อยที่สุด (${n} วัน)`, moodLift:m=>`วันที่เล่นเวท ส่วนใหญ่เธอรู้สึก ${m}`,
+ waistTitle:"รอบเอว (ไม่บังคับ)", waistPh:"เช่น 72", waistPrev:(a,b)=>b!=null?`เดือนก่อน ${b} cm`:"", waistHint:"วัดตรงสะดือ ตอนเช้า ก่อนกินอะไร",
+ photo:"ถ่ายรูปเทียบในท่าเดิม แสงเดิม เก็บไว้ในแอป Photos ของเธอเอง บางเดือนตาชั่งลดน้อย แต่รูปกับรอบเอวบอกความเปลี่ยนแปลงได้ชัดกว่า",
+ focusTitle:"เลือกโฟกัสเดือนหน้า 1 ข้อ", focusHint:"ข้อที่เลือกจะขึ้นเด่นในหน้าวันนี้ตลอดเดือน",
+ focus:{water:"ดื่มน้ำให้ครบทุกวัน",prot:"โปรตีนครบทุกมื้อ",lift:"เล่นเวทตามแผน",check:"ติ๊กเช็กลิสต์ให้ได้ 60%",sleep:"ปิดวันและเข้านอนตรงเวลา"},
+ save:"บันทึกสรุปเดือนนี้", saved:"บันทึกสรุปเดือนแล้ว ✦", share:"ทำการ์ดลงสตอรี่ 📸", open:"ดูสรุปเดือนนี้ ✦",
+ focusBar:"โฟกัสเดือนนี้", fDone:"วันนี้ทำแล้ว ✓", fTodo:"ยังไม่ได้ทำวันนี้", fRest:"วันนี้พัก",
+ cardLost:"ลดในเดือนนี้", cardCheck:"ติ๊กครบ", cardBest:"ต่อเนื่องยาวสุด"
+};
+function monthData(end=new Date()){
+  const D=state.daily||{}, p=state.profile, days=[];
+  for(let i=27;i>=0;i--){ const d=addDays(end,-i); days.push({k:dkey(d),d,v:D[dkey(d)]}); }
+  const cnt=f=>days.filter(x=>x.v&&f(x.v)).length, half=v=>v.exN&&v.ex.length>=Math.ceil(v.exN/2);
+  const liftPlanned=days.filter(x=>p.days.includes(["SU","MO","TU","WE","TH","FR","SA"][x.d.getDay()])).length;
+  let best=0,run=0; days.forEach(x=>{ if(x.v&&ratio(x.v)>=.6){ run++; best=Math.max(best,run); } else run=0; });
+  const from=days[0].k, to=days[27].k, h=(state.history||[]).filter(r=>r.date>=from&&r.date<=to);
+  const w0=h.length?(h[0].prevAvg??h[0].avg):null, w1=h.length?h[h.length-1].avg:null;
+  const tally=f=>{ const o={}; days.forEach(x=>{ if(x.v&&x.v.mood&&f(x.v)) o[x.v.mood]=(o[x.v.mood]||0)+1; }); return Object.entries(o).sort((a,b)=>b[1]-a[1]); };
+  const m={from,to,cells:days.map(x=>x.v&&x.v.n?Math.round(ratio(x.v)*4):-1),
+    check:cnt(v=>ratio(v)>=.6), water:cnt(v=>v.water>=8), prot:cnt(v=>v.protN&&v.prot.length>=v.protN), lift:cnt(half), liftPlanned,
+    sleep:cnt(v=>v.n&&v.done.includes(v.n-1)), notes:cnt(v=>!!v.note), best, w0, w1,
+    moodTop:tally(()=>true)[0]||null, moodLift:tally(half)[0]||null,
+    stickers:Object.entries(state.badgeAt||{}).filter(([,t])=>t>=from&&t<=to).map(([k])=>k)};
+  const rates={water:m.water/28,prot:m.prot/28,lift:liftPlanned?m.lift/liftPlanned:1,check:m.check/28,sleep:m.sleep/28};
+  m.focusOpts=Object.entries(rates).sort((a,b)=>a[1]-b[1]).slice(0,3).map(([k])=>k);
+  return m;
+}
+function monthHTML(m,no,pick){
+  const df=k=>new Date(k+"T12:00").toLocaleDateString(TX.locale,{day:"numeric",month:"short"});
+  const lost=m.w0!=null&&m.w1!=null?Math.round((m.w0-m.w1)*10)/10:null;
+  const prevWaist=(state.months||[]).filter(x=>x.waist).slice(-1)[0];
+  const icon=k=>(BADGES.find(b=>b[0]===k)||[])[1]||"";
+  return `<div class="report month" style="text-align:left">
+    <div class="rp-top"><span>${MX.title(no)}</span><small>${df(m.from)} – ${df(m.to)}</small></div>
+    <p class="rp-title">${lost!=null&&lost>0?MX.lost(lost):MX.steady(m.check)}</p>
+    <h4>${MX.hmTitle}</h4>
+    <div class="hm">${m.cells.map(c=>`<i class="${c<0?"no":""}" style="--o:${c<0?0:[.1,.3,.5,.75,1][c]}"></i>`).join("")}</div>
+    <div class="trend-lab"><span>${df(m.from)}</span><span>${df(m.to)}</span></div>
+    <h4>${MX.statTitle}</h4>
+    <div class="rp-stats">
+      <div><span>${MX.avg}</span><strong>${m.w1??"–"}</strong><small>${lost!=null?(lost>=0?`−${lost} kg`:`+${-lost} kg`):""}</small></div>
+      <div><span>${MX.best}</span><strong>${m.best}</strong><small>${MX.dayU}</small></div>
+      <div><span>${MX.lift}</span><strong>${m.lift}<em>/${m.liftPlanned}</em></strong><small>${MX.dayU}</small></div>
+    </div>
+    <div class="rp-stats" style="margin-top:10px">
+      <div><span>${MX.water}</span><strong>${m.water}</strong><small>${MX.dayU}</small></div>
+      <div><span>${MX.prot}</span><strong>${m.prot}</strong><small>${MX.dayU}</small></div>
+      <div><span>${MX.notes}</span><strong>${m.notes}</strong><small>${MX.dayU}</small></div>
+    </div>
+    ${m.moodTop?`<h4>${MX.moodTitle}</h4><p class="rp-why">${MX.moodTop(m.moodTop[0],m.moodTop[1])}${m.moodLift&&m.moodLift[1]>=2?`<br>${MX.moodLift(m.moodLift[0])}`:""}</p>`:""}
+    <h4>${MX.stTitle}</h4><p class="rp-why">${m.stickers.length?m.stickers.map(k=>`${icon(k)} ${UI.bname[k]}`).join("&nbsp;&nbsp; "):MX.noSt}</p>
+    ${pick?`<h4>${MX.waistTitle}</h4><input id="waistIn" type="number" inputmode="decimal" step="0.5" placeholder="${MX.waistPh}">
+      <p class="legend" style="margin-top:6px">${MX.waistHint} ${prevWaist?MX.waistPrev(0,prevWaist.waist):""}</p>
+      <div class="note">📸 ${MX.photo}</div>
+      <h4>${MX.focusTitle}</h4><div class="pills" id="focusPick">${m.focusOpts.map(k=>`<button class="pill" data-f="${k}">${MX.focus[k]}</button>`).join("")}</div>
+      <p class="legend" style="margin-top:8px">${MX.focusHint}</p>
+      <div class="row"><button class="btn" id="saveMonth">${MX.save}</button><button class="btn ghost" id="shareMonth">${MX.share}</button></div>`
+     :`${m.waist?`<p class="rp-why">${MX.waistTitle.replace(/ \(.*\)/,"")}: ${m.waist} cm</p>`:""}${m.focus?`<p class="rp-why">${MX.focusBar}: ${MX.focus[m.focus]}</p>`:""}`}
+  </div>`;
+}
+function openMonth(){
+  if(!state.profile) return;
+  const m=monthData(), no=(state.months||[]).length+1; let pickF=null;
+  openSheet(monthHTML(m,no,true));
+  $("#focusPick").onclick=e=>{ const b=e.target.closest("[data-f]"); if(!b) return; pickF=b.dataset.f;
+    document.querySelectorAll("#focusPick .pill").forEach(x=>x.classList.toggle("on",x===b)); };
+  $("#saveMonth").onclick=()=>{ const w=parseFloat($("#waistIn").value);
+    m.waist=w>30&&w<250?w:null; m.focus=pickF; m.no=no; m.saved=dkey();
+    state.months=state.months||[]; state.months.push(m); if(pickF) state.focus={key:pickF,from:dkey()};
+    save(); $("#sheet").classList.add("hidden"); renderMonths(); toast(MX.saved); checkBadges(); };
+  $("#shareMonth").onclick=()=>{ const lost=m.w0!=null&&m.w1!=null?Math.max(0,Math.round((m.w0-m.w1)*10)/10):0;
+    openShare({title:`Month ${no}`,rows:[[MX.cardLost,lost>0?`${lost} kg`:UI.justStarted],[MX.cardCheck,`${m.check}/28 ${MX.dayU}`],[MX.cardBest,`${m.best} ${MX.dayU} 🔥`],[MX.lift,`${m.lift} ${MX.dayU}`]]}); };
+}
+function renderMonths(){
+  const ms=state.months||[];
+  $("#monthList").innerHTML=ms.slice().reverse().map(m=>`<details class="wk"><summary><span>${MX.title(m.no)}</span><b>${m.w1??"–"}</b><small>${m.check}/28 ${MX.dayU}</small></summary>${monthHTML(m,m.no,false)}</details>`).join("");
+}
+function focusStatus(d,isLift){
+  const f=state.focus&&state.focus.key; if(!f) return null;
+  const ok={water:d.water>=8,prot:d.protN&&d.prot.length>=d.protN,lift:isLift?d.exN&&d.ex.length>=Math.ceil(d.exN/2):null,check:ratio(d)>=.6,sleep:d.n&&d.done.includes(d.n-1)}[f];
+  return {label:MX.focus[f], state:ok===null?MX.fRest:ok?MX.fDone:MX.fTodo, done:!!ok};
+}
+$("#openMonth").addEventListener("click",openMonth);
+
 chipify(); load();
-if(state.profile){ fillForm(state.profile); syncChips(); render(); renderHist(); show("today"); checkBadges(); }
+if(state.profile){ fillForm(state.profile); syncChips(); render(); renderHist(); renderMonths(); show("today"); checkBadges(); }
 else { render(); openOb(); }
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 })();
