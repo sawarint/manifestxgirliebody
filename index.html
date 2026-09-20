@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ลดทีละด่าน — วางแผนลดน้ำหนัก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF2F6; --paper:#FFFFFF; --ink:#1B2A38; --muted:#5B6B7A; --line:#D3DCE4;
+  --cobalt:#2957C4; --cobalt-soft:#DCE5F8; --sun:#F2B705; --sun-soft:#FFF3C7; --ok:#1F7A4D; --warn:#A6481C;
+  --display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121A22; --paper:#1A2530; --ink:#E6EDF3; --muted:#9AAAB8; --line:#2C3A47;
+    --cobalt:#7FA2F0; --cobalt-soft:#22324F; --sun:#F2C230; --sun-soft:#3A3212; --ok:#5CC08D; --warn:#F09A6F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121A22; --paper:#1A2530; --ink:#E6EDF3; --muted:#9AAAB8; --line:#2C3A47;
+  --cobalt:#7FA2F0; --cobalt-soft:#22324F; --sun:#F2C230; --sun-soft:#3A3212; --ok:#5CC08D; --warn:#F09A6F;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 var(--body)}
+.wrap{max-width:760px;margin:0 auto;padding:24px 18px 64px}
+header h1{font:700 30px/1.2 var(--display);margin:0 0 4px}
+header p{margin:0;color:var(--muted)}
+nav{display:flex;gap:6px;margin:22px 0 18px;overflow-x:auto}
+nav button{flex:1;min-width:110px;border:1.5px solid var(--line);background:transparent;color:var(--muted);
+  font:500 15px var(--body);padding:10px 12px;border-radius:10px;cursor:pointer;text-align:left}
+nav button b{font:700 13px var(--display);display:block;color:inherit;opacity:.8}
+nav button[aria-selected="true"]{border-color:var(--cobalt);color:var(--cobalt);background:var(--cobalt-soft)}
+section{display:none}
+section.on{display:block}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
+h2{font:700 21px/1.3 var(--display);margin:0 0 12px}
+h3{font:600 16px/1.4 var(--body);margin:18px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label{display:block;font-size:14px;color:var(--muted)}
+input,select,textarea{width:100%;margin-top:4px;padding:10px;border:1.5px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink);font:16px var(--body)}
+textarea{min-height:130px;font-size:13px;font-family:ui-monospace,Menlo,monospace}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--cobalt);outline-offset:1px}
+.days{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.days label{display:flex;align-items:center;gap:4px;border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink);cursor:pointer}
+.days input{width:auto;margin:0}
+.btn{border:0;border-radius:10px;padding:12px 18px;font:600 15px var(--body);cursor:pointer;background:var(--cobalt);color:#fff}
+.btn.ghost{background:transparent;color:var(--cobalt);border:1.5px solid var(--cobalt)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.err{color:var(--warn);font-weight:500;margin-top:10px}
+.targets{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.t{border-left:4px solid var(--cobalt);padding:4px 0 4px 12px}
+.t span{display:block;font-size:13px;color:var(--muted)}
+.t strong{font:700 22px/1.3 var(--display)}
+.t small{color:var(--muted)}
+
+/* staircase: the one bold element */
+.stairs{display:flex;align-items:flex-end;gap:4px;height:210px;margin:10px 0 6px;overflow-x:auto;padding-top:8px}
+.step{flex:1;min-width:64px;background:var(--cobalt-soft);border-radius:8px 8px 0 0;position:relative;
+  display:flex;flex-direction:column;justify-content:flex-start;padding:8px 6px;text-align:center}
+.step .kg{font:700 18px/1.1 var(--display)}
+.step .when{font-size:11px;color:var(--muted);line-height:1.3;margin-top:4px}
+.step.now{background:var(--sun-soft);outline:2px solid var(--sun)}
+.step.goal{background:var(--cobalt);color:#fff}
+.step.goal .when{color:#E4EBFB}
+.step.done{opacity:.55}
+.legend{font-size:13px;color:var(--muted)}
+
+ul.plan{list-style:none;margin:0;padding:0}
+ul.plan li{display:flex;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line)}
+ul.plan li:last-child{border-bottom:0}
+ul.plan time{font:700 15px var(--display);min-width:52px;color:var(--cobalt)}
+.note{background:var(--sun-soft);border-radius:10px;padding:12px 14px;font-size:14px;margin-top:12px}
+.result{border-left:4px solid var(--ok);padding:6px 0 6px 14px;margin-top:14px}
+.result.hold{border-color:var(--sun)} .result.warn{border-color:var(--warn)}
+.result strong{font:700 18px var(--display)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;display:none;max-width:90%}
+.hidden{display:none}
+.lock{background:linear-gradient(160deg,#2B3F66,#1B2A38);border-radius:18px;padding:14px;margin:12px 0 4px;max-width:380px}
+.notif{background:rgba(255,255,255,.82);color:#1B2A38;border-radius:14px;padding:8px 12px;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;row-gap:1px}
+.notif:last-child{margin-bottom:0}
+.notif span{font-size:12px;color:#5B6B7A}
+.notif small{grid-row:1;grid-column:2;font-size:12px;color:#5B6B7A}
+.notif b{grid-column:1/3;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chips button{min-width:44px;height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);
+  color:var(--ink);font:700 17px var(--display);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--cobalt);border-color:var(--cobalt);color:#fff}
+details summary{cursor:pointer;color:var(--cobalt);font-weight:500}
+#workout details{border-bottom:1px dashed var(--line);padding:10px 0}
+#workout details summary{color:var(--ink);font-weight:400}
+#workout details summary strong{display:inline-block;min-width:34px;color:var(--cobalt);font-family:var(--display)}
+#workout ul.plan{margin:6px 0 0 34px}
+#workout ul.plan time{min-width:110px;font-size:14px}
+#workout .rest{padding:10px 0 10px 16px;border-bottom:1px dashed var(--line)}
+#workout .rest strong{display:inline-block;min-width:34px;color:var(--muted);font-family:var(--display)}
+@media (prefers-reduced-motion:no-preference){.step{transition:height .5s ease}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ลดทีละด่าน">
+<meta name="theme-color" content="#2957C4">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ลดทีละด่าน</h1>
+    <p>กรอกข้อมูลครั้งเดียว ได้แผนรายวัน รายสัปดาห์ รายเดือน แล้วส่งเข้า Calendar และ Reminders ใน iPhone</p>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" data-tab="s1" aria-selected="true"><b>1</b>ข้อมูลของฉัน</button>
+    <button role="tab" data-tab="s2" aria-selected="false"><b>2</b>แผนและส่งออก</button>
+    <button role="tab" data-tab="s3" aria-selected="false"><b>3</b>อัปเดตทุกสัปดาห์</button>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section id="s1" class="on">
+    <div class="panel">
+      <h2>ข้อมูลพื้นฐาน</h2>
+      <div class="grid">
+        <label>เพศ<select id="sex"><option value="m">ชาย</option><option value="f">หญิง</option></select></label>
+        <label>อายุ (ปี)<input id="age" type="number" inputmode="numeric" value="32"></label>
+        <label>ส่วนสูง (cm)<input id="height" type="number" inputmode="decimal" value="172"></label>
+        <label>น้ำหนักตอนนี้ (kg)<input id="weight" type="number" inputmode="decimal" value="98"></label>
+        <label>น้ำหนักเป้าหมาย (kg)<input id="goal" type="number" inputmode="decimal" value="68"></label>
+        <label>ก้าวเดินต่อวันตอนนี้<input id="steps" type="number" inputmode="numeric" value="4500"></label>
+      </div>
+      <h3>ชีวิตประจำวัน</h3>
+      <div class="grid">
+        <label>งานส่วนใหญ่<select id="activity">
+          <option value="1.2">นั่งโต๊ะ ไม่ค่อยออกกำลังกาย</option>
+          <option value="1.375" selected>นั่งโต๊ะ ออกกำลังกาย 2–3 วัน</option>
+          <option value="1.55">ออกกำลังกาย 4–5 วัน</option>
+          <option value="1.725">งานใช้แรง หรือซ้อมหนักเกือบทุกวัน</option>
+        </select></label>
+        <label>ตื่นนอน<input id="wake" type="time" value="06:30"></label>
+        <label>เข้านอน<input id="sleep" type="time" value="23:00"></label>
+        <label>เวลาออกกำลังกาย<input id="wtime" type="time" value="19:30"></label>
+      </div>
+      <h3>การออกกำลังกาย</h3>
+      <div class="grid">
+        <label>อุปกรณ์ที่มี<select id="equip">
+          <option value="0" selected>ดัมเบลที่บ้าน</option>
+          <option value="1">ไม่มีอุปกรณ์ (น้ำหนักตัว)</option>
+          <option value="2">ฟิตเนส / ยิม</option>
+        </select></label>
+        <label>เวลาต่อครั้ง<select id="mins">
+          <option value="30">30 นาที</option><option value="45" selected>45 นาที</option><option value="60">60 นาที</option>
+        </select></label>
+        <label>ประสบการณ์เล่นเวท<select id="exp">
+          <option value="new">เพิ่งเริ่ม หรือห่างมานาน</option><option value="some" selected>เล่นต่อเนื่องมาบ้าง</option>
+        </select></label>
+      </div>
+      <label style="margin-top:12px">วันที่เล่นเวทได้ สูงสุด 5 วัน (วันที่เหลือเป็นเดินเร็วหรือวันพัก)</label>
+      <div class="days" id="days"></div>
+      <label style="margin-top:12px">จุดที่ต้องระวัง (ระบบจะเลือกท่าที่เบากว่าให้)</label>
+      <div class="days" id="flags">
+        <label><input type="checkbox" value="back">หลังล่าง</label>
+        <label><input type="checkbox" value="knee">เข่า</label>
+        <label><input type="checkbox" value="shoulder">ไหล่</label>
+        <label><input type="checkbox" value="balance" checked>ไม่เอาท่าที่ต้องทรงตัวมาก</label>
+      </div>
+      <div class="row"><button class="btn" id="makePlan">สร้างแผนของฉัน</button></div>
+      <div class="err" id="err1" role="alert"></div>
+      <p class="legend" style="margin-top:14px">ข้อมูลเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น ไม่มีการส่งไปที่ใด แผนนี้เป็นแนวทางทั่วไป ไม่ใช่คำแนะนำทางการแพทย์</p>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="s2">
+    <div class="panel" id="emptyPlan"><h2>ยังไม่มีแผน</h2><p>กรอกข้อมูลในขั้นที่ 1 แล้วกด "สร้างแผนของฉัน"</p></div>
+    <div id="planWrap" class="hidden">
+      <div class="panel">
+        <h2>เป้าต่อวัน</h2>
+        <div class="targets" id="targets"></div>
+        <div class="note hidden" id="adjNote"></div>
+      </div>
+      <div class="panel">
+        <h2>บันไดสู่เป้าหมาย</h2>
+        <div class="stairs" id="stairs"></div>
+        <p class="legend">ด่านละ 5 kg วันที่เป็นช่วงคาดการณ์ ถ้าลดได้ 0.5–1% ของน้ำหนักตัวต่อสัปดาห์ นับความคืบหน้าจากค่าเฉลี่ย 7 วัน</p>
+      </div>
+      <div class="panel">
+        <h2>รายวัน</h2>
+        <ul class="plan" id="daily"></ul>
+        <h3>รายสัปดาห์</h3>
+        <ul class="plan" id="weekly"></ul>
+        <h3>รายเดือน</h3>
+        <ul class="plan" id="monthly"></ul>
+      </div>
+      <div class="panel">
+        <h2>แผนออกกำลังกาย</h2>
+        <div id="workout"></div>
+        <div class="note">ช่วงลดน้ำหนัก เป้าหมายของเวทคือรักษากล้ามเนื้อและแรงไว้ หยุดแต่ละเซ็ตเมื่อเหลือแรงอีกประมาณ 2 ครั้ง พัก 60–90 วินาที ถ้าทำครบจำนวนครั้งสูงสุดได้ทุกเซ็ต ครั้งหน้าค่อยเพิ่มน้ำหนักเล็กน้อย แรงไม่ขึ้นทุกสัปดาห์ถือว่าปกติ ถ้าท่าไหนเจ็บให้หยุดท่านั้น</div>
+        <p class="legend" style="margin-top:10px">บน Apple Watch เริ่ม workout แบบ Traditional Strength Training ทุกครั้งที่เล่นเวท จำนวนครั้งจะไปแสดงในแอป Fitness และใช้ตอนสรุปสัปดาห์</p>
+      </div>
+      <div class="panel">
+        <h2>ส่งเข้า iPhone</h2>
+        <p>แบ่งหน้าที่สองแอป <strong>Calendar ใช้เตือนตามเวลา</strong> หัวข้อสั้นพอให้อ่านจบบนหน้าจอล็อกและ Watch ส่วน <strong>Reminders ใช้ติ๊ก</strong> ทีละข้อ</p>
+        <div class="lock" aria-label="ตัวอย่างการแจ้งเตือนบนหน้าจอล็อก" id="lockPreview"></div>
+        <div class="row">
+          <button class="btn" id="dlIcs">ดาวน์โหลดไฟล์ปฏิทิน (.ics)</button>
+          <button class="btn ghost" id="cpIcs">คัดลอกเนื้อหา .ics</button>
+        </div>
+        <h3>Reminders: แยกเป็นลิสต์ ติ๊กทีละข้อ</h3>
+        <p class="legend">ในแอป Reminders สร้างลิสต์ใหม่ (เช่น "ประจำวัน" หรือ "เวท: ช่วงบน") แตะเพิ่มรายการแล้ววาง แต่ละบรรทัดจะแยกเป็นหนึ่งข้อให้เอง</p>
+        <div class="row" id="cpButtons"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="s3">
+    <div class="panel">
+      <h2>สรุปสัปดาห์นี้</h2>
+      <p>เปิดแอป Health แตะ "น้ำหนัก" แล้วเลือกแท็บ W จะเห็นค่าเฉลี่ยของสัปดาห์ กรอกตัวเลขนั้นที่นี่</p>
+      <label>ค่าเฉลี่ยน้ำหนักสัปดาห์นี้ (kg)<input id="avgIn" type="number" inputmode="decimal" step="0.1" placeholder="เช่น 97.2"></label>
+      <label style="margin-top:14px">สัปดาห์นี้ทำ checklist ผ่านกี่วัน</label>
+      <div class="chips" id="passChips"></div>
+      <label style="margin-top:14px">เล่นเวทไปกี่ครั้ง (แอป Fitness แท็บ Summary ส่วน Workouts)</label>
+      <div class="chips" id="liftChips"></div>
+      <label style="margin-top:14px">อยากจดอะไรไหม (ไม่บังคับ)<input id="noteIn" type="text" placeholder="เช่น วันที่นอนดึกหิวมาก"></label>
+      <div class="row"><button class="btn" id="analyzeSimple">ปรับแผน</button></div>
+      <details style="margin-top:18px">
+        <summary>มี Shortcut ส่งข้อมูลจาก Health แล้ว</summary>
+        <div class="row">
+          <button class="btn ghost" id="sampleOk">ตัวอย่าง: สัปดาห์ปกติ</button>
+          <button class="btn ghost" id="sampleStall">ตัวอย่าง: น้ำหนักนิ่ง</button>
+          <button class="btn ghost" id="sampleFast">ตัวอย่าง: ลดเร็วเกินไป</button>
+        </div>
+        <label style="margin-top:14px">ข้อมูลจาก Shortcut<textarea id="healthIn" spellcheck="false"></textarea></label>
+        <div class="row"><button class="btn ghost" id="analyze">ปรับแผนจากข้อมูลนี้</button></div>
+      </details>
+      <div class="err" id="err3" role="alert"></div>
+      <div id="resultOut"></div>
+    </div>
+    <div class="panel hidden" id="histPanel">
+      <h2>สัปดาห์ที่ผ่านมา</h2>
+      <ul class="plan" id="hist"></ul>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+const $ = s => document.querySelector(s);
+const DAYS = [["MO","จ"],["TU","อ"],["WE","พ"],["TH","พฤ"],["FR","ศ"],["SA","ส"],["SU","อา"]];
+const KEY = "ldtd-demo-v1";
+let state = { profile:null, adj:{kcal:0, steps:0}, history:[] };
+
+function load(){ try{ const s = localStorage.getItem(KEY); if(s) state = Object.assign(state, JSON.parse(s)); }catch(e){}
+  if(state.profile) state.profile=Object.assign({equip:0,mins:45,exp:"some",flags:["balance"]},state.profile); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.style.display="block"; clearTimeout(toast._t); toast._t=setTimeout(()=>t.style.display="none",2600); }
+
+/* ---------- tabs ---------- */
+function show(id){
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected", b.dataset.tab===id));
+  document.querySelectorAll("section").forEach(s=>s.classList.toggle("on", s.id===id));
+  window.scrollTo({top:0});
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.tab)));
+
+/* ---------- form ---------- */
+$("#days").innerHTML = DAYS.map(([c,t],i)=>`<label><input type="checkbox" value="${c}" ${[0,2,4].includes(i)?"checked":""}>${t}</label>`).join("");
+
+function readForm(){
+  return {
+    sex:$("#sex").value, age:+$("#age").value, height:+$("#height").value,
+    weight:+$("#weight").value, startWeight:+$("#weight").value, goal:+$("#goal").value,
+    steps:+$("#steps").value, activity:+$("#activity").value,
+    wake:$("#wake").value, sleep:$("#sleep").value, wtime:$("#wtime").value,
+    days:[...document.querySelectorAll("#days input:checked")].map(i=>i.value).slice(0,5),
+    equip:+$("#equip").value, mins:+$("#mins").value, exp:$("#exp").value,
+    flags:[...document.querySelectorAll("#flags input:checked")].map(i=>i.value)
+  };
+}
+function fillForm(p){
+  $("#sex").value=p.sex; $("#age").value=p.age; $("#height").value=p.height; $("#weight").value=p.weight;
+  $("#goal").value=p.goal; $("#steps").value=p.steps; $("#activity").value=String(p.activity);
+  $("#wake").value=p.wake; $("#sleep").value=p.sleep; $("#wtime").value=p.wtime;
+  document.querySelectorAll("#days input").forEach(i=>i.checked=p.days.includes(i.value));
+  $("#equip").value=String(p.equip); $("#mins").value=String(p.mins); $("#exp").value=p.exp;
+  document.querySelectorAll("#flags input").forEach(i=>i.checked=p.flags.includes(i.value));
+}
+function validate(p){
+  if(!p.age||!p.height||!p.weight||!p.goal) return "กรอกอายุ ส่วนสูง น้ำหนัก และเป้าหมายให้ครบ";
+  if(p.age<18) return "แผนนี้ออกแบบสำหรับผู้ใหญ่ ถ้าอายุต่ำกว่า 18 ปี แนะนำให้วางแผนร่วมกับแพทย์หรือนักโภชนาการ";
+  if(p.height<120||p.height>230) return "ส่วนสูงควรอยู่ระหว่าง 120–230 cm";
+  if(p.weight<35||p.weight>300) return "น้ำหนักควรอยู่ระหว่าง 35–300 kg";
+  if(p.goal>=p.weight) return "น้ำหนักเป้าหมายต้องน้อยกว่าน้ำหนักตอนนี้";
+  const bmiGoal = p.goal/((p.height/100)**2);
+  if(bmiGoal<18.5) return "เป้าหมายนี้ต่ำกว่าช่วงน้ำหนักที่เหมาะสมกับส่วนสูง ลองตั้งเป้าใหม่ หรือปรึกษาแพทย์ก่อน";
+  return "";
+}
+
+/* ---------- calculations ---------- */
+function calc(p){
+  const bmr = 10*p.weight + 6.25*p.height - 5*p.age + (p.sex==="m"?5:-161);
+  const tdee = bmr*p.activity;
+  const deficit = Math.min(p.weight*0.0075*7700/7, 1000);
+  const floor = Math.max(bmr, p.sex==="m"?1500:1200);
+  const target = Math.round(Math.max(tdee - deficit + state.adj.kcal, floor)/10)*10;
+  const lo = Math.round(Math.max(target-150, floor)/10)*10, hi = target+150;
+  const water = Math.round(p.weight*33/100)*100;
+  const steps = Math.round((p.steps + 2000 + state.adj.steps)/500)*500;
+  return {bmr:Math.round(bmr), tdee:Math.round(tdee), target, lo, hi, floor:Math.round(floor),
+    proteinLo:Math.round(p.goal*1.2), proteinHi:Math.round(p.goal*1.6), water, steps};
+}
+function weeksTo(from, to, rate){ let w=from, n=0; while(w>to && n<600){ w*= (1-rate); n++; } return n; }
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+const fmt = d => d.toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"2-digit"});
+
+function milestones(p){
+  const out=[]; let m = p.weight;
+  while(true){ m = Math.round((m-5)*10)/10; if(m<=p.goal) break; out.push(m); }
+  out.push(p.goal);
+  const today=new Date();
+  return out.map(kg=>{
+    const fast=weeksTo(p.weight,kg,0.01), slow=weeksTo(p.weight,kg,0.005);
+    return {kg, fast:addDays(today,fast*7), slow:addDays(today,slow*7), mid:addDays(today,Math.round((fast+slow)/2)*7)};
+  });
+}
+function toMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
+function toTime(min){ min=((min%1440)+1440)%1440; return String(Math.floor(min/60)).padStart(2,"0")+":"+String(min%60).padStart(2,"0"); }
+
+function dailyItems(p,c){
+  const w=toMin(p.wake), s=toMin(p.sleep)+(toMin(p.sleep)<w?1440:0);
+  const glass = Math.round(c.water/4/50)*50;
+  const items=[
+    [w+10, "⚖️ ชั่งน้ำหนัก + น้ำ 1 แก้ว", `ชั่งหลังเข้าห้องน้ำ ก่อนกินอะไร แล้วดื่มน้ำ ${glass} ml`],
+    [w+180, "💧 น้ำแก้วที่ 2", `อีก ${glass} ml`],
+    [toMin("12:00"), "🍗 กลางวัน: โปรตีนก่อน", "เริ่มจากเนื้อสัตว์ ไข่ หรือเต้าหู้ ก่อนข้าว"],
+    [toMin("15:00"), "🚶 น้ำ + ลุกเดิน 5 นาที", `เป้าก้าวเดินวันนี้ ${c.steps.toLocaleString()} ก้าว`],
+    [toMin("18:30"), "🍗 เย็น: โปรตีนก่อน", `ทั้งวันรวม ${c.lo.toLocaleString()}–${c.hi.toLocaleString()} kcal`],
+    [s-60, "✅ ปิดวัน: ติ๊ก + จดโน้ต", "ติ๊ก checklist และจดสั้น ๆ ว่าวันนี้เป็นอย่างไร"],
+    [s-20, "🌙 วางมือถือ เตรียมนอน", "หรี่ไฟ งดจอ"]
+  ];
+  return items.sort((a,b)=>a[0]-b[0]).map(([m,t,d])=>({time:toTime(m), title:t, desc:d}));
+}
+
+/* ---------- workout plan ---------- */
+const EX={
+ squat:["Goblet squat","Bodyweight squat","Goblet squat หรือ Leg press"],
+ squatK:["Box squat (ขอบเตียง)","Box squat (ขอบเตียง)","Leg press ระยะสั้น"],
+ hinge:["Dumbbell RDL","Hip hinge","Romanian deadlift"],
+ hingeB:["Glute bridge + ดัมเบล","Glute bridge","Hip thrust"],
+ pushH:["Floor press","Push-up ยันเตียง","Dumbbell bench press"],
+ pushV:["Shoulder press นั่ง","Pike push-up","Machine shoulder press"],
+ pushVS:["Lateral raise เบา","Wall slide","Lateral raise เบา"],
+ pullH:["Row แขนเดียว","Prone Y-T raise","Seated cable row"],
+ pullV:["Pullover (พื้น)","Superman hold","Lat pulldown"],
+ single:["Reverse lunge","Reverse lunge","Walking lunge"],
+ singleE:["Wall sit","Wall sit","Leg curl machine"],
+ core:["Dead bug","Dead bug","Dead bug"],
+ plank:["Plank","Plank","Plank"],
+ bi:["Dumbbell curl",null,"Cable curl"],
+ tri:["Triceps overhead","Dip ขอบเตียง","Triceps pushdown"],
+ calf:["Calf raise","Calf raise","Calf raise machine"]
+};
+const HOLD={calf:"12–15",plank:"30 วิ",singleE:"40 วิ",core:"8/ข้าง"};
+const SESS={
+ fullA:["Full body A",["squat","pushH","pullH","hinge","core","tri"]],
+ fullB:["Full body B",["hingeB","pushV","pullV","single","plank","bi"]],
+ upper:["ช่วงบน",["pushH","pullH","pushV","pullV","bi","tri"]],
+ lower:["ช่วงล่าง + core",["squat","hinge","single","calf","core","plank"]],
+ push:["ดัน (อก ไหล่ หลังแขน)",["pushH","pushV","tri","plank"]],
+ pull:["ดึง (หลัง หน้าแขน)",["pullH","pullV","bi","core"]],
+ legs:["ขา",["squat","hinge","single","calf"]]
+};
+const SHORT={fullA:"Full body A",fullB:"Full body B",upper:"ช่วงบน",lower:"ช่วงล่าง",push:"ดัน",pull:"ดึง",legs:"ขา"};
+const SPLIT={1:["fullA"],2:["fullA","fullB"],3:["fullA","fullB","fullA"],4:["upper","lower","upper","lower"],5:["push","pull","legs","upper","lower"]};
+function swapKey(k,f){
+  if(k==="hinge"&&f.includes("back")) return "hingeB";
+  if(k==="squat"&&f.includes("knee")) return "squatK";
+  if(k==="single"&&(f.includes("knee")||f.includes("balance"))) return "singleE";
+  if(k==="pushV"&&f.includes("shoulder")) return "pushVS";
+  return k;
+}
+function workoutPlan(p){
+  const order=DAYS.map(d=>d[0]).filter(d=>p.days.includes(d));
+  const split=SPLIT[Math.min(order.length,5)]||[];
+  const nEx=p.mins<=30?4:(p.mins<=45?5:6), sets=p.mins<=30?2:3, reps=p.exp==="new"?"10–12":"8–12";
+  const lift={};
+  order.forEach((d,i)=>{ const [title,keys]=SESS[split[i]]; const seen=new Set(); const ex=[];
+    keys.forEach(k=>{ const kk=swapKey(k,p.flags); const name=EX[kk][p.equip]; if(!name||seen.has(name)) return; seen.add(name);
+      ex.push({name, dose:`${sets}×${HOLD[kk]||reps}`}); });
+    lift[d]={title, short:SHORT[split[i]], ex:ex.slice(0,nEx)}; });
+  const rest=DAYS.map(d=>d[0]).filter(d=>!order.includes(d));
+  const cardio={}; rest.forEach((d,i)=>{ cardio[d]= i<rest.length-1 ? "เดินเร็ว 30–40 นาที (เริ่ม Outdoor Walk บน Watch)" : "พักจริง ยืดเหยียด 10 นาที"; });
+  return {lift, cardio, count:order.length};
+}
+function renderWorkout(p){
+  const w=workoutPlan(p), first=Object.keys(w.lift)[0];
+  if(!w.count){ $("#workout").innerHTML=`<p>ยังไม่ได้เลือกวันเล่นเวท กลับไปขั้นที่ 1 เพื่อเลือกอย่างน้อย 2 วัน</p>`; return; }
+  $("#workout").innerHTML=DAYS.map(([c,t])=>{
+    if(w.lift[c]){ const s=w.lift[c];
+      return `<details ${first===c?"open":""}><summary><strong>${t}</strong> เวท: ${s.title}</summary>
+        <ul class="plan">${s.ex.map(e=>`<li><time>${e.dose}</time><div>${e.name}</div></li>`).join("")}</ul></details>`; }
+    return `<div class="rest"><strong>${t}</strong> <span class="legend">${w.cardio[c]}</span></div>`;
+  }).join("");
+}
+/* ---------- render ---------- */
+function render(){
+  const p=state.profile; if(!p){ $("#emptyPlan").classList.remove("hidden"); $("#planWrap").classList.add("hidden"); return; }
+  $("#emptyPlan").classList.add("hidden"); $("#planWrap").classList.remove("hidden");
+  const c=calc(p);
+  $("#targets").innerHTML=`
+    <div class="t"><span>แคลอรี่</span><strong>${c.lo.toLocaleString()}–${c.hi.toLocaleString()}</strong><small> kcal</small></div>
+    <div class="t"><span>โปรตีน</span><strong>${c.proteinLo}–${c.proteinHi}</strong><small> g</small></div>
+    <div class="t"><span>น้ำ</span><strong>${(c.water/1000).toFixed(1)}</strong><small> ลิตร (+0.5 วันออกกำลังกาย)</small></div>
+    <div class="t"><span>ก้าวเดิน</span><strong>${c.steps.toLocaleString()}</strong><small> ก้าว</small></div>`;
+  const notes=[];
+  if(state.adj.kcal) notes.push(`แคลอรี่ปรับแล้ว ${state.adj.kcal>0?"+":""}${state.adj.kcal} kcal`);
+  if(state.adj.steps) notes.push(`ก้าวเดินปรับแล้ว +${state.adj.steps.toLocaleString()} ก้าว`);
+  if(p.weight!==p.startWeight) notes.push(`คำนวณจากค่าเฉลี่ยล่าสุด ${p.weight} kg (เริ่มที่ ${p.startWeight} kg)`);
+  $("#adjNote").classList.toggle("hidden",!notes.length); $("#adjNote").textContent=notes.join(" • ");
+
+  const ms=milestones(p);
+  const all=[{kg:p.weight, now:true}, ...ms];
+  const n=all.length;
+  $("#stairs").innerHTML = all.map((m,i)=>{
+    const h = 70 + (130*(i/(n-1||1)));
+    const cls = m.now?"now":(i===n-1?"goal":"");
+    const when = m.now?"ตอนนี้":`${fmt(m.fast)}<br>ถึง ${fmt(m.slow)}`;
+    return `<div class="step ${cls}" style="height:${h}px"><div class="kg">${m.kg}</div><div class="when">${when}</div></div>`;
+  }).join("");
+
+  const d=dailyItems(p,c);
+  $("#daily").innerHTML=d.map(i=>`<li><time>${i.time}</time><div><strong>${i.title}</strong><br><span class="legend">${i.desc}</span></div></li>`).join("");
+  const dayNames=p.days.map(x=>DAYS.find(d=>d[0]===x)[1]).join(", ")||"ยังไม่ได้เลือก";
+  $("#weekly").innerHTML=`
+    <li><time>${p.wtime}</time><div><strong>เล่นเวท ${p.days.length} วัน</strong><br><span class="legend">วัน ${dayNames} ดูท่าในแผนออกกำลังกายด้านล่าง</span></div></li>
+    <li><time>อา.</time><div><strong>สรุปสัปดาห์ 20:00</strong><br><span class="legend">ดูค่าเฉลี่ยน้ำหนักในแอป Health แล้วกรอกในขั้นที่ 3 ใช้เวลาไม่ถึงนาที</span></div></li>`;
+  const today=new Date(); let w=p.weight; const mo=[];
+  for(let i=1;i<=3;i++){ for(let k=0;k<4;k++) w*=0.9925; const kg=Math.max(Math.round(w*10)/10,p.goal);
+    mo.push(`<li><time>ด.${i}</time><div><strong>ค่าเฉลี่ยประมาณ ${kg} kg</strong><br><span class="legend">ภายใน ${fmt(addDays(today,i*28))} ถ้าลดตามแผนกลาง ๆ</span></div></li>`); }
+  $("#monthly").innerHTML=mo.join("");
+  renderWorkout(p); renderExport(p,c);
+}
+
+/* ---------- ICS ---------- */
+function icsDate(d,t){ const [h,m]=t.split(":"); return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")+"T"+h+m+"00"; }
+function icsDay(d){ return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0"); }
+function esc(s){ return s.replace(/\\/g,"\\\\").replace(/[,;]/g,m=>"\\"+m).replace(/\n/g,"\\n"); }
+function buildIcs(){
+  const p=state.profile, c=calc(p), start=addDays(new Date(),1), stamp=icsDate(new Date(),"00:00")+"Z";
+  let uid=0; const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//ldtd//demo//TH","CALSCALE:GREGORIAN","X-WR-CALNAME:ลดทีละด่าน"];
+  const ev=(summary,desc,dt,rrule,mins,allDay)=>{
+    L.push("BEGIN:VEVENT",`UID:ldtd-${Date.now()}-${uid++}@demo`,`DTSTAMP:${stamp}`);
+    if(allDay){ L.push(`DTSTART;VALUE=DATE:${icsDay(dt)}`,`DTEND;VALUE=DATE:${icsDay(addDays(dt,1))}`); }
+    else { L.push(`DTSTART:${dt}`,`DURATION:PT${mins}M`); }
+    if(rrule) L.push("RRULE:"+rrule);
+    L.push("SUMMARY:"+esc(summary),"DESCRIPTION:"+esc(desc),"BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+esc(summary),
+      allDay?"TRIGGER:PT9H":"TRIGGER:PT0M","END:VALARM","END:VEVENT");
+  };
+  dailyItems(p,c).forEach(i=>ev(i.title,i.desc,icsDate(start,i.time),"FREQ=DAILY",10));
+  const wp=workoutPlan(p);
+  Object.entries(wp.lift).forEach(([d,s])=>ev(`🏋️ ${s.short} (${s.ex.length} ท่า)`, s.ex.map(e=>`${e.name} ${e.dose}`).join("\n")+"\nเริ่ม Strength Training บน Watch",
+    icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,p.mins));
+  Object.entries(wp.cardio).forEach(([d,t])=>ev(t.startsWith("เดิน")?"🚶 เดินเร็ว 30–40 นาที":"😌 วันพัก ยืดเหยียด",t,icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,30));
+  ev("📊 สรุปสัปดาห์","ดูค่าเฉลี่ยน้ำหนักในแอป Health (แท็บ W) แล้วกรอกในเว็บเพื่อปรับแผน",icsDate(start,"20:00"),"FREQ=WEEKLY;BYDAY=SU",15);
+  milestones(p).forEach((m,i,a)=>ev(i===a.length-1?`🏁 เป้าหมาย ${m.kg} kg`:`🏁 ด่าน ${i+1}: ${m.kg} kg`,
+    `ช่วงคาดการณ์ ${fmt(m.fast)} ถึง ${fmt(m.slow)} นับจากค่าเฉลี่ย 7 วัน`, m.mid, null, 0, true));
+  L.push("END:VCALENDAR");
+  return L.join("\r\n");
+}
+async function copy(text,msg){
+  try{ await navigator.clipboard.writeText(text); toast(msg); }
+  catch(e){ const t=document.createElement("textarea"); t.value=text; document.body.appendChild(t); t.select();
+    try{ document.execCommand("copy"); toast(msg);}catch(_){ toast("คัดลอกไม่สำเร็จ ลองกดค้างที่ข้อความแทน"); } t.remove(); }
+}
+$("#dlIcs").addEventListener("click",()=>{
+  const ics=buildIcs();
+  const iOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  if(iOS){ window.location.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics); return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  a.download="weight-plan.ics"; document.body.appendChild(a); a.click(); a.remove();
+  toast("ดาวน์โหลดแล้ว เปิดไฟล์เพื่อเพิ่มเข้าปฏิทิน");
+});
+$("#cpIcs").addEventListener("click",()=>copy(buildIcs(),"คัดลอกเนื้อหาปฏิทินแล้ว"));
+function renderExport(p,c){
+  const wp=workoutPlan(p), d=dailyItems(p,c), first=Object.values(wp.lift)[0];
+  const notes=[[d[0].time,d[0].title],[p.wtime, first?`🏋️ ${first.short} (${first.ex.length} ท่า)`:"🚶 เดินเร็ว 30–40 นาที"],[d[d.length-2].time,d[d.length-2].title]];
+  $("#lockPreview").innerHTML=notes.map(([t,x])=>`<div class="notif"><span>ปฏิทิน</span><b>${x}</b><small>${t}</small></div>`).join("");
+  const sets=[["ประจำวัน", d.map(i=>i.title.replace(/^\S+\s/,"")).join("\n")]];
+  const seen=new Set();
+  Object.values(wp.lift).forEach(s=>{ if(seen.has(s.title)) return; seen.add(s.title);
+    sets.push([`เวท: ${s.short}`, s.ex.map(e=>`${e.name} ${e.dose}`).join("\n")]); });
+  $("#cpButtons").innerHTML=sets.map(([n],i)=>`<button class="btn ghost" data-i="${i}">คัดลอก ${n}</button>`).join("");
+  $("#cpButtons").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; const [n,t]=sets[+b.dataset.i];
+    copy(t,`คัดลอก "${n}" แล้ว วางในลิสต์ Reminders ได้เลย`); };
+}
+
+/* ---------- step 1 submit ---------- */
+$("#makePlan").addEventListener("click",()=>{
+  const p=readForm(), e=validate(p); $("#err1").textContent=e; if(e) return;
+  state.profile=p; state.adj={kcal:0,steps:0}; state.history=[]; save(); render(); show("s2");
+});
+
+/* ---------- step 3: weekly update ---------- */
+function sample(kind){
+  const w=state.profile?state.profile.weight:98, arr=[];
+  const rates={ok:[0.009,0.008], stall:[0.002,0.001], fast:[0.014,0.016]}[kind];
+  let base=w*(1+rates[0]+rates[1]);
+  for(let wk=0;wk<3;wk++){ const r=wk===0?rates[0]:rates[1]; for(let d=0;d<7;d++){ arr.push(Math.round((base - base*r*(d/6) + (Math.random()-.5)*0.8)*10)/10); } base=base*(1-(wk===0?rates[0]:rates[1])); }
+  const data={
+    weights:arr,
+    steps:[6200,7400,3100,6900,7100,2800,8000],
+    sleepHours:[6.8,7.1,5.2,6.9,7.0,5.4,7.5],
+    waterMl:[2800,3100,1900,3000,3200,2100,3300],
+    checklistDays: kind==="stall"?6:5,
+    note: kind==="fast"?"กินน้อยเพราะงานยุ่ง รู้สึกเพลียตอนบ่าย":"วันที่นอนดึกหิวมาก"
+  };
+  $("#healthIn").value=JSON.stringify(data,null,1);
+}
+$("#sampleOk").addEventListener("click",()=>sample("ok"));
+$("#sampleStall").addEventListener("click",()=>sample("stall"));
+$("#sampleFast").addEventListener("click",()=>sample("fast"));
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+
+/* chips 0-7 */
+let passSel=null, liftSel=null;
+$("#liftChips").innerHTML=[0,1,2,3,4,5,6,7].map(n=>`<button type="button" aria-pressed="false" data-n="${n}">${n}</button>`).join("");
+$("#liftChips").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  liftSel=+b.dataset.n; document.querySelectorAll("#liftChips button").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
+$("#passChips").innerHTML=[0,1,2,3,4,5,6,7].map(n=>`<button type="button" aria-pressed="false" data-n="${n}">${n}</button>`).join("");
+$("#passChips").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return;
+  passSel=+b.dataset.n; document.querySelectorAll("#passChips button").forEach(x=>x.setAttribute("aria-pressed",x===b)); });
+
+function renderHist(){
+  const h=state.history; $("#histPanel").classList.toggle("hidden",!h.length);
+  $("#hist").innerHTML=h.slice().reverse().map(x=>`<li><time>${x.avg}</time><div>${new Date(x.date).toLocaleDateString("th-TH",{day:"numeric",month:"short"})}
+    <span class="legend"> ลด ${x.pct}% • checklist ${x.pass}/7${x.lifts!=null?` • เวท ${x.lifts}/${x.planned}`:""}${x.note?" • "+String(x.note).replace(/</g,"&lt;"):""}</span></div></li>`).join("");
+}
+
+function runAnalysis({cur,prev,prevPct,pass,note,sleepHours,steps,lifts}){
+  const pct=(prev-cur)/prev*100;
+  let cls="", head="", why="";
+  if(pass<5){ cls="hold"; head="คงแผนเดิม และทำ checklist ให้ง่ายขึ้น";
+    why=`สัปดาห์นี้ผ่าน checklist ${pass} จาก 7 วัน ตัวเลขยังไม่ต้องปรับ เพราะเป้าไม่ได้ผิด แต่ยังทำไม่ถึง ลองเลือกข้อที่พลาดบ่อยที่สุดแล้วทำให้ง่ายลง`; }
+  else if(pct>1){ cls="warn"; state.adj.kcal+=150; head="เพิ่มแคลอรี่ 150 kcal";
+    why=`ค่าเฉลี่ยลด ${pct.toFixed(1)}% ในสัปดาห์เดียว เร็วกว่าช่วงที่แนะนำ การลดเร็วเกินไปเสี่ยงเสียกล้ามเนื้อและเพลีย`; }
+  else if(pct>=0.5){ head="กำลังดี คงแผนเดิม";
+    why=`ค่าเฉลี่ยลด ${(prev-cur).toFixed(1)} kg (${pct.toFixed(1)}%) อยู่ในช่วง 0.5–1% ต่อสัปดาห์พอดี`; }
+  else if(prevPct!=null && prevPct<0.5){ cls="hold"; state.adj.steps+=1500; head="เพิ่มก้าวเดิน 1,500 ก้าว";
+    why=`ค่าเฉลี่ยนิ่งสองสัปดาห์ติด ขณะที่ทำ checklist ได้ดี จึงเพิ่มการเคลื่อนไหวก่อนลดอาหาร`; }
+  else { cls="hold"; head="ลดช้ากว่าแผน รอดูอีก 1 สัปดาห์";
+    why=`ค่าเฉลี่ยลด ${pct.toFixed(1)}% ต่ำกว่าเป้าเล็กน้อย น้ำหนักแกว่งได้จากน้ำและเกลือ ถ้าสัปดาห์หน้ายังนิ่งจะปรับให้`; }
+  let insight="";
+  if(Array.isArray(sleepHours)&&Array.isArray(steps)&&sleepHours.length&&sleepHours.length===steps.length){
+    const low=steps.filter((_,i)=>sleepHours[i]<6), hi=steps.filter((_,i)=>sleepHours[i]>=6);
+    if(low.length&&hi.length){ const diff=Math.round((1-avg(low)/avg(hi))*100);
+      if(diff>10) insight=`วันที่นอนน้อยกว่า 6 ชม. คุณเดินน้อยลงประมาณ ${diff}% ลองขยับแจ้งเตือนเข้านอนให้เร็วขึ้น 30 นาที`; }
+  }
+  const p=state.profile, milestoneBefore=milestones(p)[0].kg;
+  const planned=p.days.length, lastH=state.history[state.history.length-1];
+  let train="";
+  if(lifts!=null && planned){
+    if(lifts>=planned) train=`เล่นเวทครบ ${lifts}/${planned} ครั้ง ท่าไหนทำครบจำนวนครั้งสูงสุดทุกเซ็ตแล้ว สัปดาห์หน้าเพิ่มน้ำหนักได้`;
+    else if(lifts<=planned-2 && lastH && lastH.lifts!=null && lastH.lifts<=lastH.planned-2 && planned>2){
+      const dropped=p.days.pop(); train=`เล่นได้ ${lifts}/${planned} ครั้ง ต่ำกว่าแผนสองสัปดาห์ติด จึงลดเหลือ ${p.days.length} วัน (เอาวัน${DAYS.find(d=>d[0]===dropped)[1]}ออก) แผนที่ทำได้จริงดีกว่าแผนที่ดีแต่ทำไม่ได้`; }
+    else train=`เล่นเวท ${lifts}/${planned} ครั้ง ขาดบ้างไม่เป็นไร สัปดาห์หน้าเริ่มจากวันแรกของแผนตามปกติ`;
+    if(pct>1) train+=" ช่วงที่ลดเร็วแบบนี้ยิ่งควรรักษาการเล่นเวทไว้ เพื่อไม่ให้เสียกล้ามเนื้อ";
+  }
+  p.weight=Math.round(cur*10)/10;
+  const reached=p.weight<=milestoneBefore;
+  state.history.push({date:new Date().toISOString().slice(0,10), avg:p.weight, pct:+pct.toFixed(2), pass, note:note||"", lifts:lifts??null, planned});
+  save(); render(); renderHist();
+  $("#resultOut").innerHTML=`
+    <div class="result ${cls}"><strong>${head}</strong><p>${why}</p>${insight?`<p>${insight}</p>`:""}</div>
+    ${train?`<div class="result"><strong>การออกกำลังกาย</strong><p>${train}</p></div>`:""}
+    ${reached?`<div class="note">ผ่านด่าน ${milestoneBefore} kg แล้ว แผนคำนวณเป้าใหม่จากน้ำหนักปัจจุบันให้เรียบร้อย</div>`:""}
+    ${cls==="warn"?`<div class="note">ถ้ามีอาการเวียนหัว ใจสั่น หรือเพลียผิดปกติ ควรปรึกษาแพทย์</div>`:""}
+    <div class="row"><button class="btn" id="goPlan">ดูแผนใหม่</button></div>`;
+  $("#goPlan").addEventListener("click",()=>show("s2"));
+}
+
+$("#analyzeSimple").addEventListener("click",()=>{
+  $("#err3").textContent=""; $("#resultOut").innerHTML="";
+  if(!state.profile){ $("#err3").textContent="สร้างแผนในขั้นที่ 1 ก่อน"; return; }
+  const cur=+$("#avgIn").value;
+  if(!cur||cur<35||cur>300){ $("#err3").textContent="กรอกค่าเฉลี่ยน้ำหนักสัปดาห์นี้ เป็นกิโลกรัม"; return; }
+  if(passSel===null){ $("#err3").textContent="แตะเลือกจำนวนวันที่ทำ checklist ผ่าน"; return; }
+  if(liftSel===null){ $("#err3").textContent="แตะเลือกจำนวนครั้งที่เล่นเวท"; return; }
+  const last=state.history[state.history.length-1];
+  const prev= last?last.avg:state.profile.weight;
+  if(Math.abs(prev-cur)>5){ $("#err3").textContent=`ตัวเลขต่างจากครั้งก่อน (${prev} kg) เกิน 5 kg ตรวจอีกครั้งว่าเป็นค่าเฉลี่ยของสัปดาห์`; return; }
+  runAnalysis({cur, prev, prevPct:last?last.pct:null, pass:passSel, lifts:liftSel, note:$("#noteIn").value.trim()});
+  $("#avgIn").value=""; $("#noteIn").value="";
+});
+
+$("#analyze").addEventListener("click",()=>{
+  $("#err3").textContent=""; $("#resultOut").innerHTML="";
+  if(!state.profile){ $("#err3").textContent="สร้างแผนในขั้นที่ 1 ก่อน"; return; }
+  let d; try{ d=JSON.parse($("#healthIn").value); }catch(e){ $("#err3").textContent="อ่านข้อมูลไม่ได้ ตรวจว่าวางข้อความจาก Shortcut ครบทั้งหมด"; return; }
+  if(!Array.isArray(d.weights)||d.weights.length<14){ $("#err3").textContent="ต้องมีน้ำหนักอย่างน้อย 14 วัน เพื่อเทียบค่าเฉลี่ยสองสัปดาห์"; return; }
+  const W=d.weights, cur=avg(W.slice(-7)), prev=avg(W.slice(-14,-7));
+  const prevPct=W.length>=21?(avg(W.slice(-21,-14))-prev)/avg(W.slice(-21,-14))*100:null;
+  runAnalysis({cur, prev, prevPct, pass:+d.checklistDays||0, lifts:d.liftSessions??null, note:d.note, sleepHours:d.sleepHours, steps:d.steps});
+});
+
+load(); if(state.profile) fillForm(state.profile); render(); renderHist();
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+})();
+</script>
+</body>
+</html>
