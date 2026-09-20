@@ -96,6 +96,27 @@ ul.plan strong{font-weight:500}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
   background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-size:14px;display:none;max-width:90%;text-align:center}
 .hidden{display:none}
+.seg{display:inline-flex;border:1px solid var(--ink);border-radius:999px;padding:3px;gap:2px;margin-bottom:22px}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 13px var(--body);padding:7px 16px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.prot-total{margin-bottom:22px}
+.prot-row{display:grid;grid-template-columns:62px 1fr;column-gap:16px;padding:14px 0;border-bottom:1px solid var(--line)}
+.prot-row:last-child{border-bottom:0}
+.prot-row .tl-time{font-size:19px}
+.prot-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.prot-head strong{font-weight:500}
+.prot-head b{font:400 22px/1 var(--display);white-space:nowrap}
+.prot-head b small{font:400 12px var(--body);color:var(--muted);margin-left:2px}
+.pbar{height:4px;background:var(--soft);border-radius:2px;margin:9px 0 7px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--ink)}
+.prot-note{font-size:13px;color:var(--muted);line-height:1.5}
+.prot-note em{font-style:normal;color:var(--ink)}
+.prot-tips p{margin:0 0 10px}
+.prot-tips p:last-child{margin:0}
+ul.eq{list-style:none;margin:0;padding:0}
+ul.eq li{padding:8px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+ul.eq li:last-child{border-bottom:0}
+
 .timeline{list-style:none;margin:4px 0 0;padding:0}
 .timeline li{display:grid;grid-template-columns:62px 20px 1fr;column-gap:12px;padding-bottom:24px}
 .timeline li.period{padding-bottom:14px}
@@ -238,6 +259,14 @@ details summary{cursor:pointer;color:var(--ink);text-decoration:underline;text-u
         <ul class="plan" id="monthly"></ul>
       </div>
       <div class="panel">
+        <h2>โปรตีนต่อวัน</h2>
+        <div class="seg" id="protToggle" role="group"></div>
+        <div id="protein"></div>
+        <div class="note prot-tips"><p><strong>แบ่งใกล้เคียงกันทุกมื้อ</strong> ดีกว่ากินหนักมื้อเดียว ร่างกายใช้สร้างกล้ามเนื้อได้ดีเมื่อได้รับเป็นช่วง ๆ ทุก 3–5 ชั่วโมง</p><p><strong>วันเล่นเวทเพิ่มขึ้นเล็กน้อย</strong> และมีมื้อใกล้เวลาเล่น เพื่อช่วยซ่อมกล้ามเนื้อ ช่วงลดน้ำหนักโปรตีนยังช่วยให้อิ่มนานด้วย</p><p><strong>ยอดรวมทั้งวันสำคัญที่สุด</strong> ถ้าพลาดมื้อไหน เติมในมื้อถัดไปได้ ถ้ามีโรคไตหรือแพทย์ให้จำกัดโปรตีน ควรปรึกษาแพทย์ก่อนใช้ตัวเลขนี้</p></div>
+        <h3>โปรตีนประมาณ 25 g เท่ากับ</h3>
+        <ul class="eq"><li>อกไก่หรือหมูสันในสุก 1 ฝ่ามือ (ราว 90 g)</li><li>ปลาสุก 1 ฝ่ามือใหญ่ (ราว 120 g)</li><li>ไข่ 4 ฟอง</li><li>เต้าหู้แข็งราว 200 g</li><li>กรีกโยเกิร์ต 1 ถ้วย + นม 1 กล่อง</li><li>เวย์โปรตีน 1 สกู๊ป</li></ul>
+      </div>
+      <div class="panel">
         <h2>แผนออกกำลังกาย</h2>
         <div id="workout"></div>
         <div class="note">ช่วงลดน้ำหนัก เป้าหมายของเวทคือรักษากล้ามเนื้อและแรงไว้ หยุดแต่ละเซ็ตเมื่อเหลือแรงอีกประมาณ 2 ครั้ง พัก 60–90 วินาที ถ้าทำครบจำนวนครั้งสูงสุดได้ทุกเซ็ต ครั้งหน้าค่อยเพิ่มน้ำหนักเล็กน้อย แรงไม่ขึ้นทุกสัปดาห์ถือว่าปกติ ถ้าท่าไหนเจ็บให้หยุดท่านั้น</div>
@@ -355,7 +384,7 @@ function calc(p){
   const water = Math.round(p.weight*33/100)*100;
   const steps = Math.round((p.steps + 2000 + state.adj.steps)/500)*500;
   return {bmr:Math.round(bmr), tdee:Math.round(tdee), target, lo, hi, floor:Math.round(floor),
-    proteinLo:Math.round(p.goal*1.2), proteinHi:Math.round(p.goal*1.6), water, steps};
+    proteinLo:Math.round(p.goal*1.2), proteinHi:Math.round(p.goal*1.6), proteinRest:r5(p.goal*1.4), proteinLift:r5(p.goal*1.6), water, steps};
 }
 function weeksTo(from, to, rate){ let w=from, n=0; while(w>to && n<600){ w*= (1-rate); n++; } return n; }
 function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
@@ -377,20 +406,57 @@ function toTime(min){ min=((min%1440)+1440)%1440; return String(Math.floor(min/6
 
 function fmt12(min){ const m=((min%1440)+1440)%1440, h=Math.floor(m/60);
   return `${h%12||12}:${String(m%60).padStart(2,"0")} ${h<12?"AM":"PM"}`; }
-function dailyItems(p,c){
+function r5(x){ return Math.round(x/5)*5; }
+function dayTimes(p){
   const q=m=>Math.round(m/15)*15;
   const w=toMin(p.wake), s=toMin(p.sleep)+(toMin(p.sleep)<=w?1440:0);
-  const L=v=>(Math.round(c.water*v/100/100)/10).toFixed(1).replace(/\.0$/,"");
   const bf=q(w+45), lunch=Math.max(toMin("12:00"), q(bf+180));
   const dinner=Math.min(Math.max(toMin("18:30"), q(lunch+330)), q(s-180));
-  const mid=q((bf+lunch)/2), aft=q((lunch+dinner)/2), eveW=Math.min(q(dinner+90), q(s-90)), close=q(s-45);
+  return {w,s,bf,lunch,dinner,mid:q((bf+lunch)/2),aft:q((lunch+dinner)/2),eveW:Math.min(q(dinner+90),q(s-90)),close:q(s-45)};
+}
+const PNAME={bf:"อาหารเช้า",lunch:"มื้อกลางวัน",snack:"ของว่างบ่าย",pre:"ของว่างก่อนเล่น",post:"หลังเล่นเวท",dinner:"มื้อเย็น"};
+const PNOTE={bf:"เช่น ไข่ 2–3 ฟอง + นม 1 กล่อง",lunch:"เนื้อสัตว์ ปลา หรือเต้าหู้",snack:"เช่น นมถั่วเหลือง กรีกโยเกิร์ต หรือไข่ต้ม",pre:"1–2 ชม. ก่อนเล่น ย่อยง่าย เช่น โยเกิร์ต หรือนม",post:"ภายใน 1–2 ชม. เช่น นม 1 กล่อง + ไข่ 2 ฟอง หรือเวย์ 1 สกู๊ป",dinner:"เนื้อสัตว์ ปลา หรือเต้าหู้",dinnerPost:"มื้อหลังเล่น ให้เป็นมื้อโปรตีนใหญ่สุดของวัน"};
+function proteinPlan(p,c,lift){
+  const t=dayTimes(p), total=lift?c.proteinLift:c.proteinRest;
+  let ws=toMin(p.wtime); if(ws<t.w) ws+=1440; const we=ws+(p.mins||45);
+  let m, mode="rest";
+  if(!lift) m=[["bf",t.bf,.25],["lunch",t.lunch,.30],["snack",t.aft,.15],["dinner",t.dinner,.30]];
+  else if(we<=t.lunch){ mode="post"; m=[["bf",t.bf,.20],["post",we+15,.20],["lunch",t.lunch,.30],["dinner",t.dinner,.30]]; }
+  else if(we<=t.dinner+15 && ws>=t.lunch+150){ mode="pre"; m=[["bf",t.bf,.25],["lunch",t.lunch,.25],["pre",ws-90,.15],["dinner",t.dinner,.35]]; }
+  else if(we<=t.dinner+15){ mode="post"; m=[["bf",t.bf,.25],["lunch",t.lunch,.25],["post",we+15,.20],["dinner",t.dinner,.30]]; }
+  else { mode="post"; m=[["bf",t.bf,.25],["lunch",t.lunch,.30],["dinner",t.dinner,.25],["post",we+15,.20]]; }
+  const meals=m.map(([key,min,fr])=>({key,min,g:r5(total*fr)}));
+  const big=meals.reduce((a,b)=>b.g>a.g?b:a); big.g+=total-meals.reduce((a,b)=>a+b.g,0);
+  meals.sort((a,b)=>a.min-b.min);
+  return {total,meals,mode};
+}
+let protLift=true;
+function renderProtein(p,c){
+  const hasLift=p.days.length>0; if(!hasLift) protLift=false;
+  const pp=proteinPlan(p,c,protLift), max=Math.max(...pp.meals.map(x=>x.g));
+  const palm=p=>`≈ ${p} ฝ่ามือ`;
+  const ratio=(pp.total/p.goal).toFixed(1);
+  $("#protToggle").innerHTML=(hasLift?`<button type="button" data-l="1" aria-pressed="${protLift}">วันเล่นเวท</button>`:"")+`<button type="button" data-l="0" aria-pressed="${!protLift}">วันพัก</button>`;
+  $("#protein").innerHTML=`<div class="t prot-total"><span>รวมทั้งวัน</span><strong>${pp.total}</strong><small>g หรือ ${ratio} g ต่อน้ำหนักเป้าหมาย 1 kg</small></div>`+
+    pp.meals.map(x=>{ const [hm,ap]=fmt12(x.min).split(" ");
+      const note=(x.key==="dinner"&&pp.mode==="pre")?PNOTE.dinnerPost:PNOTE[x.key];
+      return `<div class="prot-row"><span class="tl-time">${hm}<small>${ap}</small></span><div>
+        <div class="prot-head"><strong>${PNAME[x.key]}</strong><b>${x.g}<small>g</small></b></div>
+        <div class="pbar"><i style="width:${Math.round(x.g/max*100)}%"></i></div>
+        <div class="prot-note">${(x.key==="lunch"||x.key==="dinner")?`<em>${palm(Math.max(.5,Math.round(x.g/25*2)/2))}</em> `:""}${note}</div></div></div>`; }).join("");
+  $("#protToggle").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; protLift=b.dataset.l==="1"; renderProtein(p,c); };
+}
+function dailyItems(p,c){
+  const {w,s,bf,lunch,dinner,mid,aft,eveW,close}=dayTimes(p);
+  const L=v=>(Math.round(c.water*v/100/100)/10).toFixed(1).replace(/\.0$/,"");
+  const pr=proteinPlan(p,c,false), pg=k=>pr.meals.find(x=>x.key===k).g;
   const items=[
     [w+5,"⚖️ ชั่งน้ำหนัก","หลังเข้าห้องน้ำ ก่อนกินอะไร แล้วดื่มน้ำ 2 แก้ว"],
-    [bf,"🍳 อาหารเช้า: มีโปรตีน","ไข่ นม โยเกิร์ต หรือเต้าหู้"],
+    [bf,"🍳 อาหารเช้า: มีโปรตีน",`โปรตีนประมาณ ${pg("bf")} g เช่น ไข่ นม โยเกิร์ต หรือเต้าหู้`],
     [mid,`💧 น้ำครบ ${L(35)} ลิตร`,"นับรวมตั้งแต่ตื่นนอน"],
-    [lunch,"🍱 กลางวัน: โปรตีนก่อนข้าว","ผักครึ่งจาน เนื้อสัตว์หนึ่งส่วน ข้าวหนึ่งส่วน"],
+    [lunch,"🍱 กลางวัน: โปรตีนก่อนข้าว",`โปรตีนประมาณ ${pg("lunch")} g ผักครึ่งจาน เนื้อสัตว์หนึ่งส่วน ข้าวหนึ่งส่วน`],
     [aft,"🚶 ลุกเดิน 10 นาที",`เป้าวันนี้ ${c.steps.toLocaleString()} ก้าว และน้ำครบ ${L(65)} ลิตร`],
-    [dinner,"🍽️ มื้อเย็น",`ทั้งวันรวม ${c.lo.toLocaleString()}–${c.hi.toLocaleString()} kcal`],
+    [dinner,"🍽️ มื้อเย็น",`โปรตีนประมาณ ${pg("dinner")} g ทั้งวันรวม ${c.lo.toLocaleString()}–${c.hi.toLocaleString()} kcal`],
     [eveW,`💧 น้ำครบ ${L(100)} ลิตร`,"หลังจากนี้จิบพอ จะได้ไม่ตื่นกลางดึก"],
     [close,"🌙 ปิดวัน + วางมือถือ","ติ๊ก checklist จดโน้ตสั้น ๆ แล้วหรี่ไฟ"]
   ];
@@ -467,7 +533,7 @@ function render(){
   const c=calc(p);
   $("#targets").innerHTML=`
     <div class="t"><span>แคลอรี่</span><strong>${c.lo.toLocaleString()}–${c.hi.toLocaleString()}</strong><small> kcal</small></div>
-    <div class="t"><span>โปรตีน</span><strong>${c.proteinLo}–${c.proteinHi}</strong><small> g</small></div>
+    <div class="t"><span>โปรตีน</span><strong>${c.proteinRest}–${c.proteinLift}</strong><small> g (วันพัก–วันเล่นเวท)</small></div>
     <div class="t"><span>น้ำ</span><strong>${(c.water/1000).toFixed(1)}</strong><small> ลิตร (+0.5 วันออกกำลังกาย)</small></div>
     <div class="t"><span>ก้าวเดิน</span><strong>${c.steps.toLocaleString()}</strong><small> ก้าว</small></div>`;
   const notes=[];
@@ -501,7 +567,7 @@ function render(){
   for(let i=1;i<=3;i++){ for(let k=0;k<4;k++) w*=0.9925; const kg=Math.max(Math.round(w*10)/10,p.goal);
     mo.push(`<li><time>ด.${i}</time><div><strong>ค่าเฉลี่ยประมาณ ${kg} kg</strong><br><span class="legend">ภายใน ${fmt(addDays(today,i*28))} ถ้าลดตามแผนกลาง ๆ</span></div></li>`); }
   $("#monthly").innerHTML=mo.join("");
-  renderWorkout(p); renderExport(p,c);
+  renderWorkout(p); renderExport(p,c); renderProtein(p,c);
 }
 
 /* ---------- ICS ---------- */
@@ -521,7 +587,9 @@ function buildIcs(){
   };
   dailyItems(p,c).forEach(i=>ev(i.title,i.desc,icsDate(start,i.time),"FREQ=DAILY",10));
   const wp=workoutPlan(p);
-  Object.entries(wp.lift).forEach(([d,s])=>ev(`🏋️ ${s.short} (${s.ex.length} ท่า)`, s.ex.map(e=>`${e.name} ${e.dose}`).join("\n")+"\nเริ่ม Strength Training บน Watch",
+  const ppl=proteinPlan(p,c,true), pm=ppl.meals.find(x=>x.key==="post"||x.key==="pre")||ppl.meals[ppl.meals.length-1];
+  const protLine=(m=>`${PNAME[m.key]} ${fmt12(m.min)} โปรตีน ~${m.g} g`)(pm);
+  Object.entries(wp.lift).forEach(([d,s])=>ev(`🏋️ ${s.short} (${s.ex.length} ท่า)`, s.ex.map(e=>`${e.name} ${e.dose}`).join("\n")+"\nเริ่ม Strength Training บน Watch"+"\n"+protLine,
     icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,p.mins));
   Object.entries(wp.cardio).forEach(([d,t])=>ev(t.startsWith("เดิน")?"🚶 เดินเร็ว 30–40 นาที":"😌 วันพัก ยืดเหยียด",t,icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,30));
   ev("📊 สรุปสัปดาห์","ดูค่าเฉลี่ยน้ำหนักในแอป Health (แท็บ W) แล้วกรอกในเว็บเพื่อปรับแผน",icsDate(start,"20:00"),"FREQ=WEEKLY;BYDAY=SU",15);
