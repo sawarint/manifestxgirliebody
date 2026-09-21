@@ -472,7 +472,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
       <button id="resetAll" class="danger">ล้างข้อมูลทั้งหมด</button>
     </div>
   </section>
-  <p class="legend ver">เวอร์ชัน 23</p>
+  <p class="legend ver">เวอร์ชัน 24</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>วันนี้</button>
@@ -1323,12 +1323,12 @@ $("#openMonth").addEventListener("click",openMonth);
 const HX={exercise:"ออกกำลังกาย",exU:"นาที",stand:"ยืน",standU:"ชม.",title:"จาก Apple Health",intro:"ดึงน้ำหนัก ก้าว น้ำ และวงจาก Fitness เข้ามาเอง ไม่ต้องกรอก",
  syncBtn:"ซิงก์ตอนนี้",setupBtn:"วิธีตั้งค่า",syncAgain:"ซิงก์อีกครั้ง",weight:"น้ำหนัก",steps:"ก้าว",stepsU:"ก้าว",energy:"เผาผลาญ",water:"น้ำ",
  synced:n=>`ซิงก์แล้ว ${n} รายการจาก Health ✦`,pasteTitle:"ซิงก์จาก Health",pasteHint:"ยังไม่เจอข้อมูลในคลิปบอร์ด รัน Shortcut \"ซิงก์ลดทีละด่าน\" ก่อน แล้วกดซิงก์อีกครั้ง หรือวางข้อความเองด้านล่าง",
- importBtn:"นำเข้า",guideBtn:"วิธีสร้าง Shortcut",bad:"อ่านข้อมูลไม่ได้ ลองรัน Shortcut ใหม่อีกครั้ง",
+ importBtn:"นำเข้า",guideBtn:"วิธีสร้าง Shortcut",bad:"อ่านข้อมูลไม่ได้ ตรวจว่ามีคำว่า end และวันที่ในข้อความ",got:"ข้อความที่อ่านได้",
  fromHealth:n=>`ค่าเฉลี่ยจาก Health ${n} วัน`,watchLift:"Apple Watch บันทึกการเล่นเวทวันนี้แล้ว ✓",
  guide:`<h2>ตั้งค่าซิงก์ครั้งเดียว</h2>
 <p class="legend">สร้าง Shortcut ในแอป Shortcuts ชื่อ "ซิงก์ลดทีละด่าน" ทำครั้งเดียว ใช้ได้ตลอด</p>
 <ol class="guide">
-<li><b>น้ำหนัก</b> เพิ่ม <em>Find Health Samples</em> ตั้ง Type = Weight, Start Date is in the last 14 days, Group By = Day, Fill Missing เปิด, Sort by Start Date เรียง Oldest First ตามด้วย <em>Get Details of Health Samples</em> เลือก Value แล้ว <em>Combine Text</em> ด้วยเครื่องหมาย , ตั้งชื่อตัวแปร W</li>
+<li><b>น้ำหนัก</b> เพิ่ม <em>Find Health Samples</em> ตั้ง Type = Weight, Start Date is in the last 14 days, Group By = Day, Fill Missing เปิด, Sort by Start Date เรียง Oldest First ตามด้วย <em>Get Details of Health Samples</em> เลือก Value แล้ว <em>Combine Text</em> เลือก Custom แล้วพิมพ์ ; (เซมิโคลอน) ตั้งชื่อตัวแปร W</li>
 <li><b>ก้าวเดิน</b> ทำแบบเดียวกันด้วย Type = Steps ตั้งชื่อ S</li>
 <li><b>น้ำ</b> Type = Water ตั้งชื่อ A</li>
 <li><b>พลังงาน</b> Type = Active Energy ตั้งชื่อ E</li>
@@ -1342,8 +1342,19 @@ const HX={exercise:"ออกกำลังกาย",exU:"นาที",stand:
 <p class="legend" style="margin-top:12px">ถ้าเปิดแอปผ่าน Safari แทนไอคอนหน้าจอโฮม ให้เปลี่ยนขั้นสุดท้ายเป็น <em>Open URLs</em> ไปที่ลิงก์แอปตามด้วย <code>#sync=</code> และข้อความจากข้อ 6 ข้อมูลจะเข้าเองโดยไม่ต้องกดซิงก์ ชื่อเมนูอาจต่างเล็กน้อยตามเวอร์ชัน iOS</p>`};
 /* ---------- Apple Health sync (via Shortcut, no server) ---------- */
 function parseSync(txt){
-  const t=String(txt||""), a=t.indexOf("{"), b=t.lastIndexOf("}"); if(a<0||b<a) return null;
-  try{ const d=JSON.parse(t.slice(a,b+1)); return d&&/^\d{4}-\d{2}-\d{2}$/.test(d.end||"")?d:null; }catch(e){ return null; }
+  const t=String(txt||"");
+  const m=t.match(/"?end"?\s*[:=]\s*"?\s*(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/i); if(!m) return null;
+  let y=+m[1]; if(y>2400) y-=543;
+  const end=`${y}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`;
+  const num=x=>{ x=String(x).trim().replace(/[^\d.,\-]/g,""); if(!x) return 0;
+    if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(x)) x=x.replace(/,/g,""); else if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(x)&&x.includes(",")) x=x.replace(/\./g,"").replace(",","."); else x=x.replace(",",".");
+    const v=parseFloat(x); return isFinite(v)?v:0; };
+  const arr=key=>{ const r=t.match(new RegExp('"?'+key+'"?\\s*[:=]\\s*\\[([^\\]]*)\\]','i')); if(!r) return undefined;
+    const body=r[1]; if(!body.trim()) return [];
+    const sep=body.includes(";")?";":body.includes("\n")?"\n":",";
+    return body.split(sep).map(num); };
+  const d={end,weight:arr("weight"),steps:arr("steps"),water:arr("water"),energy:arr("energy"),workouts:arr("workouts"),exercise:arr("exercise"),stand:arr("stand")};
+  return Object.keys(d).some(k=>k!=="end"&&Array.isArray(d[k])&&d[k].length)?d:null;
 }
 function importSync(d){
   const H=state.health=Object.assign({weight:{},steps:{},water:{},energy:{},lift:{},exercise:{},stand:{}},state.health||{}); H.exercise=H.exercise||{}; H.stand=H.stand||{};
@@ -1363,10 +1374,10 @@ async function doSync(){
   let txt=""; try{ txt=await navigator.clipboard.readText(); }catch(e){}
   const d=parseSync(txt); if(d){ afterSync(importSync(d)); return; }
   openSheet(`<div style="text-align:left"><h2>${HX.pasteTitle}</h2><p class="legend">${HX.pasteHint}</p>
-    <textarea id="syncIn" spellcheck="false" placeholder='{"end":"...","weight":[...]}'></textarea>
+    <textarea id="syncIn" spellcheck="false" placeholder='{"end":"...","weight":[...]}'>${escH(txt)}</textarea>
     <div class="err" id="syncErr"></div>
     <div class="row"><button class="btn" id="syncGo">${HX.importBtn}</button><button class="btn ghost" data-sync-guide>${HX.guideBtn}</button></div></div>`);
-  $("#syncGo").onclick=()=>{ const d=parseSync($("#syncIn").value); if(!d){ $("#syncErr").textContent=HX.bad; return; } $("#sheet").classList.add("hidden"); afterSync(importSync(d)); };
+  $("#syncGo").onclick=()=>{ const v=$("#syncIn").value, d=parseSync(v); if(!d){ $("#syncErr").innerHTML=`${HX.bad}${v.trim()?`<br><span class="legend">${HX.got}: <code>${escH(v.slice(0,160))}</code></span>`:""}`; return; } $("#sheet").classList.add("hidden"); afterSync(importSync(d)); };
 }
 function hashSync(){
   if(!location.hash.startsWith("#sync=")) return;
