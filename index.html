@@ -299,6 +299,34 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}.ob-step.on,.sheet-body{animation:none}}
 .ver{text-align:center;margin-top:24px}
+#analyzeSimple.off{background:var(--soft);color:var(--muted);cursor:not-allowed}
+#weekGate{display:block;background:var(--soft);border-radius:18px;padding:14px 16px;margin-top:16px}
+#weekGate>span{font:600 14px var(--head)}
+#weekGate .rp-stats{grid-template-columns:repeat(3,1fr)}
+#weekGate .rp-stats>div{background:var(--card);padding:10px}
+#weekGate .rp-stats strong{font-size:22px}
+.gated label,.gated .chips,.gated .prefill{display:none!important}
+.undo{margin-top:12px}
+.todo small{white-space:normal}
+
+.mf .mf-btns{display:flex;flex-direction:column;gap:6px;flex:0 0 34px}
+.mf .mf-write{width:auto;height:auto;border-radius:0;flex:none;color:var(--ink);font-size:13px;border:0;background:none;padding:0;margin-top:8px;font:500 13px var(--body);color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.mf-add{display:flex;gap:8px;align-items:stretch;margin-top:6px}
+.mf-add input{margin-top:0;flex:1}
+.mf-add .btn{padding:0 20px}
+.mf-list{list-style:none;margin:14px 0 6px;padding:0}
+.mf-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-weight:500}
+.mf-list li.empty{color:var(--muted);font-weight:400;font-size:14px}
+.mf-list button{border:0;background:var(--soft);border-radius:50%;width:30px;height:30px;flex:0 0 30px;cursor:pointer;color:var(--ink);font-size:17px}
+
+.appbar .logo{display:flex;align-items:center;gap:7px}
+.appbar .logo>span{margin-left:-7px}
+.mark{width:22px;height:22px;color:var(--ink)}
+.linkbtn{border:0;background:none;padding:0;font:inherit;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#bkNudge span{grid-column:1/2}
+#bkNudge b{grid-column:1/2}
+#bkNudge .btn{grid-column:2/3;grid-row:1/3}
+
 .timeline li.tl-group{display:block;padding:4px 16px 2px;background:var(--soft);border-radius:18px;margin-bottom:12px}
 .tl-head{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0 8px;border-bottom:1.5px solid var(--ink)}
 .tl-head b{font:700 16px var(--head)}
@@ -311,7 +339,7 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 .tl-b strong{display:block;font-weight:600;line-height:1.4}
 .tl-b span{display:block;font-size:13px;color:var(--muted);line-height:1.5;margin-top:2px}
 
-.hk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hk>div{background:var(--soft);border-radius:14px;padding:10px 8px;min-width:0}
 .hk span{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hk strong{display:block;font:700 18px/1.2 var(--head)}
@@ -335,13 +363,14 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
 </style>
 </head>
 <body>
-<header class="appbar"><span class="logo">ลดทีละด่าน<span>.</span></span><a class="lang" href="en.html" lang="en">EN</a></header>
+<header class="appbar"><span class="logo"><svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h5v5h5v5h7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 3.2l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9z" fill="currentColor"/></svg>ลดทีละด่าน<span>.</span></span><a class="lang" href="en.html" lang="en">EN</a></header>
 <div class="wrap">
   <section id="today">
     <div class="hello" id="hello"></div>
     <div class="hero" id="hero"></div>
     <div class="mf" id="manifest"></div>
     <div class="focus hidden" id="focusBar"></div>
+    <div class="focus hidden" id="bkNudge" style="grid-template-columns:1fr auto"><span>ข้อมูลเก็บอยู่ในเครื่องนี้เท่านั้น</span><b>สำรองข้อมูลสัปดาห์นี้</b><button class="btn ghost" data-backup style="padding:8px 14px">สำรอง</button></div>
     <div class="panel" id="hkCard"></div>
     <div class="panel"><div class="cardhead"><h2>เช็กลิสต์วันนี้</h2><b id="todoCount"></b></div><div id="todo"></div></div>
     <div class="panel"><div class="cardhead"><h2>น้ำ 💧</h2><b id="waterCount"></b></div><div class="glasses" id="water"></div></div>
@@ -355,7 +384,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
   <section id="s2">
     <div class="panel" id="emptyPlan"><h2>ยังไม่มีแผน</h2><p>ตอบคำถามสั้น ๆ 5 ข้อ แล้วระบบจะสร้างแผนให้</p><button class="btn" data-open-ob>เริ่มเลย</button></div>
     <div id="planWrap" class="hidden">
-      <div class="jump" id="jump"><button data-j="pTargets">เป้าต่อวัน</button><button data-j="pStairs">บันได</button><button data-j="pDaily">ตารางวัน</button><button data-j="pProtein">โปรตีน</button><button data-j="pWorkout">เวท</button><button data-j="pExport">ลง iPhone</button></div>
+      <div class="jump" id="jump"><button data-j="pTargets">เป้าต่อวัน</button><button data-j="pStairs">บันได</button><button data-j="pDaily">ตารางวัน</button><button data-j="pProtein">โปรตีน</button><button data-j="pWorkout">เวท</button><button data-j="pCardio">คาร์ดิโอ</button><button data-j="pExport">ลง iPhone</button></div>
       <div class="panel" id="pTargets">
         <h2>เป้าต่อวัน</h2>
         <div class="targets" id="targets"></div>
@@ -386,6 +415,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
         <div class="note">ช่วงลดน้ำหนัก เป้าหมายของเวทคือรักษากล้ามเนื้อและแรงไว้ หยุดแต่ละเซ็ตเมื่อเหลือแรงอีกประมาณ 2 ครั้ง พัก 60–90 วินาที ถ้าทำครบจำนวนครั้งสูงสุดได้ทุกเซ็ต ครั้งหน้าค่อยเพิ่มน้ำหนักเล็กน้อย แรงไม่ขึ้นทุกสัปดาห์ถือว่าปกติ ถ้าท่าไหนเจ็บให้หยุดท่านั้น</div>
         <p class="legend" style="margin-top:10px">บน Apple Watch เริ่ม workout แบบ Traditional Strength Training ทุกครั้งที่เล่นเวท จำนวนครั้งจะไปแสดงในแอป Fitness และใช้ตอนสรุปสัปดาห์</p>
       </div>
+      <div class="panel" id="pCardio">
+        <h2>คาร์ดิโอ</h2>
+        <div id="cardio"></div>
+      </div>
       <div class="panel" id="pExport">
         <h2>ส่งเข้า iPhone</h2>
         <p>ปฏิทินจะเด้งเตือนตามเวลาในแผน หัวข้อสั้นพออ่านจบบนหน้าจอล็อกและ Apple Watch ส่วนการติ๊กทำในแท็บ "วันนี้" ของแอปนี้ได้เลย</p>
@@ -401,7 +434,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
   <section id="s3">
     <div class="panel">
       <h2>เช็กอินประจำสัปดาห์ 📓</h2>
-      <p class="legend">ทำทุกวันอาทิตย์ ใช้เวลาไม่ถึงนาที ถ้าซิงก์กับ Apple Health ไว้ ค่าเฉลี่ยน้ำหนักจะเติมให้เอง ถ้ายังไม่ได้ซิงก์ ดูได้ในแอป Health แตะ "น้ำหนัก" แล้วเลือกแท็บ W</p>
+      <p class="legend">สัปดาห์ละครั้ง ใช้เวลาไม่ถึงนาที ซิงก์ Health ไว้ ค่าเฉลี่ยน้ำหนักจะเติมให้เอง</p>
       <label>ค่าเฉลี่ยน้ำหนักสัปดาห์นี้ (kg)<input id="avgIn" type="number" inputmode="decimal" step="0.1" placeholder="เช่น 62.4"></label>
       <label style="margin-top:14px">สัปดาห์นี้ทำ checklist ผ่านกี่วัน</label>
       <div class="chips" id="passChips"></div>
@@ -409,7 +442,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
       <div class="chips" id="liftChips"></div>
       <div class="prefill hidden" id="prefillNote">เติมให้แล้วจากที่เธอติ๊กในแอป แก้ได้ถ้าไม่ตรง</div>
       <label style="margin-top:14px">อยากจดอะไรไหม (ไม่บังคับ)<input id="noteIn" type="text" placeholder="เช่น วันที่นอนดึกหิวมาก"></label>
-      <div class="row"><button class="btn block" id="analyzeSimple">ดูผลสัปดาห์นี้ ✨</button></div>
+      <div class="row"><div id="weekGate" class="hidden" style="width:100%"></div><button class="btn block" id="analyzeSimple">ดูผลสัปดาห์นี้ ✨</button></div>
       <div class="err" id="err3" role="alert"></div>
       <div id="resultOut"></div>
     </div>
@@ -419,7 +452,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
     </div>
     <div class="panel" id="monthPanel">
       <h2>ภาพรวมรายเดือน</h2>
-      <p class="legend">สรุปทุก 4 สัปดาห์ ดูความสม่ำเสมอทั้งเดือน วัดรอบเอว และเลือกโฟกัสของเดือนหน้า</p>
+      <p class="legend">ทุก 4 สัปดาห์: ความสม่ำเสมอ รอบเอว และโฟกัสเดือนหน้า</p>
       <button class="btn ghost block" id="openMonth" style="margin-top:6px">ดูภาพรวม 4 สัปดาห์ล่าสุด</button>
       <div id="monthList" style="margin-top:10px"></div>
     </div>
@@ -427,15 +460,19 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
 
   <section id="me">
     <div class="me-card" id="meCard"></div>
+    <p class="legend" id="bkInfo" style="margin:-4px 2px 14px"></p>
     <div class="panel"><div class="cardhead"><h2>สติกเกอร์ของเธอ</h2><b id="stCount"></b></div><div class="stickers" id="stickers"></div>
       <p class="legend" style="margin-top:12px">ได้จากการทำนิสัยดี ๆ ต่อเนื่อง ไม่ใช่จากตัวเลขบนตาชั่งอย่างเดียว</p></div>
     <div class="panel menu">
       <button id="editProfile">แก้ไขข้อมูลและแผน</button>
+      <button data-mf-edit>manifest ของฉัน</button>
       <button id="shareMe">ทำการ์ดลงสตอรี่</button>
+      <button data-backup>สำรองข้อมูล</button>
+      <button data-restore>กู้คืนข้อมูล</button>
       <button id="resetAll" class="danger">ล้างข้อมูลทั้งหมด</button>
     </div>
   </section>
-  <p class="legend ver">เวอร์ชัน 15</p>
+  <p class="legend ver">เวอร์ชัน 20</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>วันนี้</button>
@@ -451,6 +488,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
       <label>อยากให้เรียกว่าอะไร<input id="nick" type="text" maxlength="20" placeholder="ชื่อเล่น" autocomplete="nickname"></label>
       <label>เพศ<select id="sex"><option value="f">หญิง</option><option value="m">ชาย</option></select></label>
       <label>อายุ<input id="age" type="number" inputmode="numeric" value="27"></label>
+      <p class="legend" style="margin-top:6px">เคยใช้มาก่อน? <button class="linkbtn" data-restore>กู้คืนจากไฟล์สำรอง</button></p>
     </div>
     <div class="ob-step">
       <div class="emo">📏</div><h1>ตัวเลขของเธอ</h1><p class="lead">ใช้คำนวณเป้าแคลอรี่ น้ำ และโปรตีน</p>
@@ -626,16 +664,16 @@ function dailyItems(p,c){
   const L=v=>(Math.round(c.water*v/100/100)/10).toFixed(1).replace(/\.0$/,"");
   const pr=proteinPlan(p,c,false), pg=k=>pr.meals.find(x=>x.key===k).g;
   const items=[
-    [w+5,"⚖️ ชั่งน้ำหนัก","หลังเข้าห้องน้ำ ก่อนกินอะไร แล้วดื่มน้ำ 2 แก้ว"],
-    [bf,"🍳 อาหารเช้า: มีโปรตีน",`โปรตีนประมาณ ${pg("bf")} g เช่น ไข่ นม โยเกิร์ต หรือเต้าหู้`],
-    [mid,`💧 น้ำครบ ${L(35)} ลิตร`,"นับรวมตั้งแต่ตื่นนอน"],
-    [lunch,"🍱 กลางวัน: โปรตีนก่อนข้าว",`โปรตีนประมาณ ${pg("lunch")} g ผักครึ่งจาน เนื้อสัตว์หนึ่งส่วน ข้าวหนึ่งส่วน`],
-    [aft,"🚶 ลุกเดิน 10 นาที",`เป้าวันนี้ ${c.steps.toLocaleString()} ก้าว และน้ำครบ ${L(65)} ลิตร`],
-    [dinner,"🍽️ มื้อเย็น",`โปรตีนประมาณ ${pg("dinner")} g ทั้งวันรวม ${c.lo.toLocaleString()}–${c.hi.toLocaleString()} kcal`],
-    [eveW,`💧 น้ำครบ ${L(100)} ลิตร`,"หลังจากนี้จิบพอ จะได้ไม่ตื่นกลางดึก"],
-    [close,"🌙 ปิดวัน + วางมือถือ","ติ๊ก checklist จดโน้ตสั้น ๆ แล้วหรี่ไฟ"]
+    [w+5,"⚖️ ชั่งน้ำหนัก","หลังเข้าห้องน้ำ ก่อนกินอะไร แล้วดื่มน้ำ 2 แก้ว","ชั่งน้ำหนัก","ก่อนกินอะไร"],
+    [bf,"🍳 อาหารเช้า: มีโปรตีน",`โปรตีนประมาณ ${pg("bf")} g เช่น ไข่ นม โยเกิร์ต หรือเต้าหู้`,"อาหารเช้า",`โปรตีน ${pg("bf")} g`],
+    [mid,`💧 น้ำครบ ${L(35)} ลิตร`,"นับรวมตั้งแต่ตื่นนอน",`น้ำ ${L(35)} ลิตร`,"รวมตั้งแต่เช้า"],
+    [lunch,"🍱 กลางวัน: โปรตีนก่อนข้าว",`โปรตีนประมาณ ${pg("lunch")} g ผักครึ่งจาน เนื้อสัตว์หนึ่งส่วน ข้าวหนึ่งส่วน`,"มื้อกลางวัน",`โปรตีน ${pg("lunch")} g`],
+    [aft,"🚶 ลุกเดิน 10 นาที",`เป้าวันนี้ ${c.steps.toLocaleString()} ก้าว และน้ำครบ ${L(65)} ลิตร`,"เดิน 10 นาที",`เป้า ${c.steps.toLocaleString()} ก้าว`],
+    [dinner,"🍽️ มื้อเย็น",`โปรตีนประมาณ ${pg("dinner")} g ทั้งวันรวม ${c.lo.toLocaleString()}–${c.hi.toLocaleString()} kcal`,"มื้อเย็น",`โปรตีน ${pg("dinner")} g`],
+    [eveW,`💧 น้ำครบ ${L(100)} ลิตร`,"หลังจากนี้จิบพอ จะได้ไม่ตื่นกลางดึก",`น้ำ ${L(100)} ลิตร`,"ครบทั้งวัน"],
+    [close,"🌙 ปิดวัน + วางมือถือ","ติ๊ก checklist จดโน้ตสั้น ๆ แล้วหรี่ไฟ","ปิดวัน","ติ๊ก + โน้ต"]
   ];
-  return items.sort((a,b)=>a[0]-b[0]).map(([m,t,d])=>({min:m,time:toTime(m),t12:fmt12(m),title:t,desc:d}));
+  return items.sort((a,b)=>a[0]-b[0]).map(([m,t,d,sh,mt])=>({min:m,time:toTime(m),t12:fmt12(m),title:t,desc:d,short:sh,meta:mt}));
 }
 const PERIODS=["เช้า","บ่าย","ค่ำ"];
 function periodOf(min){ const x=((min%1440)+1440)%1440; return x<300?PERIODS[2]:x<720?PERIODS[0]:x<1080?PERIODS[1]:PERIODS[2]; }
@@ -688,7 +726,7 @@ function workoutPlan(p){
       ex.push({name, dose:`${sets}×${HOLD[kk]||reps}`}); });
     lift[d]={title, short:SHORT[split[i]], ex:ex.slice(0,nEx)}; });
   const rest=DAYS.map(d=>d[0]).filter(d=>!order.includes(d));
-  const cardio={}; rest.forEach((d,i)=>{ cardio[d]= i<rest.length-1 ? "เดินเร็ว 30–40 นาที (เริ่ม Outdoor Walk บน Watch)" : "พักจริง ยืดเหยียด 10 นาที"; });
+  const cardio={}; rest.forEach((d,i)=>{ cardio[d]= i<rest.length-1 ? CX.walkLine(cardioPlan(p)) : CX.restLine; });
   return {lift, cardio, count:order.length};
 }
 function renderWorkout(p){
@@ -739,7 +777,7 @@ function render(){
   for(let i=1;i<=3;i++){ for(let k=0;k<4;k++) w*=0.9925; const kg=Math.max(Math.round(w*10)/10,p.goal);
     mo.push(`<li><time>ด.${i}</time><div><strong>ค่าเฉลี่ยประมาณ ${kg} kg</strong><br><span class="legend">ภายใน ${fmt(addDays(today,i*28))} ถ้าลดตามแผนกลาง ๆ</span></div></li>`); }
   if($("#monthly")) $("#monthly").innerHTML=mo.join("");
-  renderWorkout(p); renderExport(p,c); renderProtein(p,c);
+  renderWorkout(p); renderCardio(p); renderExport(p,c); renderProtein(p,c);
 }
 
 /* ---------- ICS ---------- */
@@ -763,7 +801,7 @@ function buildIcs(){
   const protLine=(m=>`${PNAME[m.key]} ${fmt12(m.min)} โปรตีน ~${m.g} g`)(pm);
   Object.entries(wp.lift).forEach(([d,s])=>ev(`🏋️ ${s.short} (${s.ex.length} ท่า)`, s.ex.map(e=>`${e.name} ${e.dose}`).join("\n")+"\nเริ่ม Strength Training บน Watch"+"\n"+protLine,
     icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,p.mins));
-  Object.entries(wp.cardio).forEach(([d,t])=>ev(t.startsWith("เดิน")?"🚶 เดินเร็ว 30–40 นาที":"😌 วันพัก ยืดเหยียด",t,icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,30));
+  const cpI=cardioPlan(p); cpI.days.forEach(d=>ev(CX.icsTitle(cpI),CX.zoneLine(cpI),icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,cpI.mins)); cpI.rest.forEach(d=>ev(CX.icsRest,CX.restLine,icsDate(start,p.wtime),"FREQ=WEEKLY;BYDAY="+d,15));
   ev("📊 สรุปสัปดาห์","ดูค่าเฉลี่ยน้ำหนักในแอป Health (แท็บ W) แล้วกรอกในเว็บเพื่อปรับแผน",icsDate(start,"20:00"),"FREQ=WEEKLY;BYDAY=SU",15);
   milestones(p).forEach((m,i,a)=>ev(i===a.length-1?`🏁 เป้าหมาย ${m.kg} kg`:`🏁 ด่าน ${i+1}: ${m.kg} kg`,
     `ช่วงคาดการณ์ ${fmt(m.fast)} ถึง ${fmt(m.slow)} นับจากค่าเฉลี่ย 7 วัน`, m.mid, null, 0, true));
@@ -860,6 +898,7 @@ function decide(d){
   return {key,trail};
 }
 function runAnalysis({cur,prev,prevPct,pass,note,sleepHours,steps,lifts}){
+  lastSnap=JSON.parse(JSON.stringify({profile:state.profile,adj:state.adj,cardio:state.cardio||null}));
   const p=state.profile, pct=(prev-cur)/prev*100;
   const c0=calc(p), days0=p.days.slice(), msBefore=milestones(p)[0].kg;
   const {key,trail}=decide({pct,pass,prevPct});
@@ -880,7 +919,10 @@ function runAnalysis({cur,prev,prevPct,pass,note,sleepHours,steps,lifts}){
   p.weight=Math.round(cur*10)/10;
   const reached=p.weight<=msBefore;
   if(reached) p.planWeight=p.weight;
+  const cw=cardioWeekDone(p), cm0=cw.mins;
+  if(cw.planned&&cw.n>=cw.planned&&cm0<45){ state.cardio=Object.assign({},state.cardio,{mins:cm0+5}); }
   const c1=calc(p), f=n=>n.toLocaleString(), changes=[];
+  if(cardioPlan(p).mins!==cm0) changes.push({k:"cardio",from:cm0,to:cardioPlan(p).mins});
   if(c1.lo!==c0.lo||c1.hi!==c0.hi) changes.push({k:"kcal",from:`${f(c0.lo)}–${f(c0.hi)}`,to:`${f(c1.lo)}–${f(c1.hi)}`});
   if(c1.steps!==c0.steps) changes.push({k:"steps",from:f(c0.steps),to:f(c1.steps)});
   if(c1.water!==c0.water) changes.push({k:"water",from:(c0.water/1000).toFixed(1),to:(c1.water/1000).toFixed(1)});
@@ -920,7 +962,7 @@ function reportHTML(r,fresh){
     ${r.reached?`<div class="note">${TX.reached(r.ms)}</div>`:""}
     ${r.key==="fast"?`<div class="note">${TX.warn}</div>`:""}
     ${r.note?`<p class="legend">${TX.noteLabel}: ${esc(r.note)}</p>`:""}`;
-  if(fresh) h+=`<div class="note">${r.changes.length?TX.reimport:TX.keepCal}</div>
+  if(fresh) h+=`<div class="note">${r.changes.length?TX.reimport:TX.keepCal}</div><p class="undo"><button class="linkbtn" data-undo>${WG.undo}</button></p>
     <div class="row"><button class="btn" id="goPlan">${r.changes.length?TX.seePlanNew:TX.seePlan}</button><button class="btn ghost" id="shareWeek">${UI.shareCard}</button>${r.week%4===0?`<button class="btn ghost" data-open-month>${MX.open}</button>`:""}</div>`;
   return h+`</div>`;
 }
@@ -943,6 +985,7 @@ function renderHist(){
 }
 
 $("#analyzeSimple").addEventListener("click",()=>{
+  if(!weekGate().open){ renderGate(); return; }
   $("#err3").textContent=""; $("#resultOut").innerHTML="";
   if(!state.profile){ $("#err3").textContent="สร้างแผนในขั้นที่ 1 ก่อน"; return; }
   const cur=+$("#avgIn").value;
@@ -953,7 +996,7 @@ $("#analyzeSimple").addEventListener("click",()=>{
   const prev= last?last.avg:state.profile.weight;
   if(Math.abs(prev-cur)>5){ $("#err3").textContent=`ตัวเลขต่างจากครั้งก่อน (${prev} kg) เกิน 5 kg ตรวจอีกครั้งว่าเป็นค่าเฉลี่ยของสัปดาห์`; return; }
   runAnalysis({cur, prev, prevPct:last?last.pct:null, pass:passSel, lifts:liftSel, note:$("#noteIn").value.trim()});
-  passSel=null; liftSel=null; document.querySelectorAll("#passChips button,#liftChips button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  passSel=null; liftSel=null; document.querySelectorAll("#passChips button,#liftChips button").forEach(b=>b.setAttribute("aria-pressed","false")); renderGate();
   $("#avgIn").value=""; $("#noteIn").value="";
 });
 
@@ -1002,7 +1045,7 @@ function show(id){
   window.scrollTo({top:0});
   if(id==="today") renderToday();
   if(id==="me") renderMe();
-  if(id==="s3") prefillWeek();
+  if(id==="s3"){ prefillWeek(); renderGate(); }
 }
 document.querySelectorAll("nav.tabbar button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.tab)));
 document.addEventListener("click",e=>{
@@ -1067,11 +1110,11 @@ function renderToday(){
   const pct=Math.round(d.done.length/items.length*100);
   $("#hero").innerHTML=`<div class="ring">${ringSVG(pct)}<div><b>${pct}%</b><small>${UI.today}</small></div></div>
     <div class="hero-side"><div><span>${UI.streak}</span><strong>${st.cur} ${UI.days} 🔥</strong></div><div><span>${UI.nextStep(ms.kg)}</span><strong>${UI.left(left)}</strong></div></div>`;
-  const doy=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5), mf=UI.MF[(doy+(state.mfShift||0))%UI.MF.length];
-  $("#manifest").innerHTML=`<div><span>${UI.mfLabel}</span><p>${mf}</p></div><button id="mfNext" aria-label="สุ่มใหม่">↻</button>`;
+  const mf=currentMF(), mfMine=mfList().mine;
+  $("#manifest").innerHTML=`<div><span>${mfMine?MFX.label:UI.mfLabel}</span><p>${escH(mf)}</p>${mfMine?"":`<button class="mf-write" data-mf-edit>${MFX.write} ✎</button>`}</div><div class="mf-btns"><button id="mfNext" aria-label="สุ่มใหม่">↻</button><button data-mf-edit aria-label="${MFX.edit}">✎</button></div>`;
   $("#todoCount").textContent=`${d.done.length}/${items.length}`;
   $("#todo").innerHTML=items.map((it,i)=>{ const on=d.done.includes(i), [hm,ap]=it.t12.split(" ");
-    return `<button class="todo ${on?"on":""}" data-i="${i}" aria-pressed="${on}"><span class="ck"></span><span class="tt"><b>${it.title.replace(/^\S+\s/,"")}</b><small>${it.desc}</small></span><time>${hm}<em>${ap}</em></time></button>`; }).join("");
+    return `<button class="todo ${on?"on":""}" data-i="${i}" aria-pressed="${on}"><span class="ck"></span><span class="tt"><b>${it.short}</b><small>${it.meta}</small></span><time>${hm}<em>${ap}</em></time></button>`; }).join("");
   const G=8, per=c.water/G;
   $("#waterCount").textContent=`${(d.water*per/1000).toFixed(1)} / ${(c.water/1000).toFixed(1)} ${UI.liter}`;
   $("#water").innerHTML=Array.from({length:G},(_,i)=>`<button class="glass ${i<d.water?"on":""}" data-g="${i}" aria-label="${UI.glass(i+1)}">${GLASS}</button>`).join("");
@@ -1081,15 +1124,17 @@ function renderToday(){
   if(lift){ d.exN=lift.ex.length;
     $("#wkToday").innerHTML=`<div class="cardhead"><h2>${UI.liftToday(lift.short)}</h2><b>${d.ex.length}/${lift.ex.length}</b></div><p class="legend" style="margin-top:-6px">${UI.liftSub(lift.ex.length,p.mins)}<br>${fmt12(toMin(p.wtime))}</p>
       <div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i); return `<button class="todo ${on?"on":""}" data-ex="${i}" aria-pressed="${on}"><span class="ck"></span><span class="tt"><b>${e.name}</b></span><time>${e.dose}</time></button>`; }).join("")}</div>`; }
-  else { d.exN=0; const t=wp.cardio[code]||""; const walk=t.startsWith("เดิน")||t.startsWith("Brisk");
-    $("#wkToday").innerHTML=`<div class="cardhead"><h2>${UI.cardioToday}</h2></div><p class="legend">${t}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${walk?UI.walkBtn:UI.restBtn}</b></span></button></div>`; }
+  else { d.exN=0; const cp=cardioPlan(p), isC=cp.days.includes(code);
+    $("#wkToday").innerHTML=isC?`<div class="cardhead"><h2>${CX.todayTitle(cp)}</h2><b>~${cp.kcal} kcal</b></div><p class="legend" style="margin-top:-6px">${CX.zoneLine(cp)}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${CX.doneBtn(cp)}</b><small>${cp.type.n}</small></span></button></div>`
+      :`<div class="cardhead"><h2>${CX.restTitle}</h2></div><p class="legend">${CX.restLine}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${UI.restBtn}</b></span></button></div>`; }
   if(lift&&state.health&&state.health.lift[dkey()]) $("#wkToday").insertAdjacentHTML("beforeend",`<p class="hk-ok">${HX.watchLift}</p>`);
+  if(lift){ const cpL=cardioPlan(p); if(cpL.post) $("#wkToday").insertAdjacentHTML("beforeend",`<p class="hk-ok">${CX.postLine(cpL)}</p>`); }
   const fs=focusStatus(d,!!lift);
   $("#focusBar").classList.toggle("hidden",!fs);
   if(fs) $("#focusBar").innerHTML=`<span>${MX.focusBar}</span><b>${fs.label}</b><em class="${fs.done?"ok":""}">${fs.state}</em>`;
   $("#moods").innerHTML=UI.moods.map(m=>`<button data-mood="${m}" aria-pressed="${d.mood===m}">${m}</button>`).join("");
   if(document.activeElement!==$("#dayNote")) $("#dayNote").value=d.note||"";
-  renderHealth(); save();
+  renderHealth(); renderBackup(); save();
 }
 $("#today").addEventListener("click",e=>{
   const t=e.target.closest("[data-i],[data-g],[data-pk],[data-ex],[data-walk],[data-mood],#mfNext,#shareDay"); if(!t) return;
@@ -1153,7 +1198,7 @@ async function openShare(r){
   let y=760;
   rows.forEach(([k,v])=>{ x.fillStyle="rgba(251,248,242,.85)"; x.beginPath(); x.roundRect(80,y-90,920,170,48); x.fill();
     x.fillStyle="#8B8377"; x.font=`500 44px ${B}`; x.fillText(k,140,y+10); x.fillStyle=ink; x.font=`700 72px ${H}`; x.textAlign="right"; x.fillText(v,940,y+22); x.textAlign="left"; y+=210; });
-  const doy=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5), mf=UI.MF[(doy+(state.mfShift||0))%UI.MF.length];
+  const mf=currentMF(), mfMine=mfList().mine;
   x.fillStyle=rose; x.font=`600 60px ${H}`; wrapText(x,`“${mf}”`,880).forEach((l,i)=>x.fillText(l,96,y+80+i*84));
   x.fillStyle="#8B8377"; x.font=`500 36px ${B}`; x.fillText("#ลดทีละด่าน  #girliebody",96,1830);
   const url=cv.toDataURL("image/png");
@@ -1176,7 +1221,7 @@ function prefillWeek(){
 
 /* ---------- me ---------- */
 function renderMe(){
-  const p=state.profile; if(!p) return; const got=state.badges||[];
+  const p=state.profile; if(!p) return; renderBackup(); const got=state.badges||[];
   const nick=p.nick||"";
   $("#meCard").innerHTML=`<div class="avatar">${nick?escH([...nick][0]):"✦"}</div><div><h2>${escH(nick)||UI.you}</h2><p>${UI.meSub(p.startWeight,p.goal)}</p></div>`;
   $("#stCount").textContent=UI.stCount(got.length,BADGES.length);
@@ -1275,7 +1320,7 @@ function focusStatus(d,isLift){
 }
 $("#openMonth").addEventListener("click",openMonth);
 
-const HX={title:"จาก Apple Health",intro:"ให้น้ำหนัก ก้าวเดิน น้ำ และพลังงานที่เผาผลาญจาก iPhone และ Apple Watch เข้ามาในแอปเอง ไม่ต้องกรอก ข้อมูลยังอยู่ในเครื่องเธอเท่านั้น",
+const HX={exercise:"ออกกำลังกาย",exU:"นาที",stand:"ยืน",standU:"ชม.",title:"จาก Apple Health",intro:"ดึงน้ำหนัก ก้าว น้ำ และวงจาก Fitness เข้ามาเอง ไม่ต้องกรอก",
  syncBtn:"ซิงก์ตอนนี้",setupBtn:"วิธีตั้งค่า",syncAgain:"ซิงก์อีกครั้ง",weight:"น้ำหนัก",steps:"ก้าว",stepsU:"ก้าว",energy:"เผาผลาญ",water:"น้ำ",
  synced:n=>`ซิงก์แล้ว ${n} รายการจาก Health ✦`,pasteTitle:"ซิงก์จาก Health",pasteHint:"ยังไม่เจอข้อมูลในคลิปบอร์ด รัน Shortcut \"ซิงก์ลดทีละด่าน\" ก่อน แล้วกดซิงก์อีกครั้ง หรือวางข้อความเองด้านล่าง",
  importBtn:"นำเข้า",guideBtn:"วิธีสร้าง Shortcut",bad:"อ่านข้อมูลไม่ได้ ลองรัน Shortcut ใหม่อีกครั้ง",
@@ -1287,8 +1332,10 @@ const HX={title:"จาก Apple Health",intro:"ให้น้ำหนัก �
 <li><b>ก้าวเดิน</b> ทำแบบเดียวกันด้วย Type = Steps ตั้งชื่อ S</li>
 <li><b>น้ำ</b> Type = Water ตั้งชื่อ A</li>
 <li><b>พลังงาน</b> Type = Active Energy ตั้งชื่อ E</li>
+<li><b>วง Exercise</b> Type = Exercise Minutes (บางเครื่องชื่อ Apple Exercise Time) ตั้งชื่อ X</li>
+<li><b>วง Stand</b> Type = Stand Hours (ไม่บังคับ ถ้าไม่มีให้ข้าม) ตั้งชื่อ T</li>
 <li><b>วันที่</b> เพิ่ม <em>Current Date</em> แล้ว <em>Format Date</em> แบบ Custom เป็น yyyy-MM-dd ตั้งชื่อ D</li>
-<li><b>รวมข้อความ</b> เพิ่ม <em>Text</em> แล้วพิมพ์ <code>{"end":"D","weight":[W],"steps":[S],"water":[A],"energy":[E]}</code> ตัวอักษร D W S A E ให้แตะเลือกเป็นตัวแปร</li>
+<li><b>รวมข้อความ</b> เพิ่ม <em>Text</em> แล้วพิมพ์ <code>{"end":"D","weight":[W],"steps":[S],"water":[A],"energy":[E],"exercise":[X],"stand":[T]}</code> ตัวอักษร D W S A E X T ให้แตะเลือกเป็นตัวแปร</li>
 <li><b>ปิดท้าย</b> เพิ่ม <em>Copy to Clipboard</em> และ <em>Show Notification</em> ว่า "เปิดลดทีละด่านแล้วกดซิงก์"</li>
 </ol>
 <div class="note"><b>ให้รันเองทุกวัน:</b> แท็บ Automation เลือก Time of Day ทุกวันตอน 9:00 AM (หลังชั่งน้ำหนัก) แล้วเลือก Run Immediately จากนั้นเปิดแอปแล้วกด "ซิงก์ตอนนี้"</div>
@@ -1299,7 +1346,7 @@ function parseSync(txt){
   try{ const d=JSON.parse(t.slice(a,b+1)); return d&&/^\d{4}-\d{2}-\d{2}$/.test(d.end||"")?d:null; }catch(e){ return null; }
 }
 function importSync(d){
-  const H=state.health=Object.assign({weight:{},steps:{},water:{},energy:{},lift:{}},state.health||{});
+  const H=state.health=Object.assign({weight:{},steps:{},water:{},energy:{},lift:{},exercise:{},stand:{}},state.health||{}); H.exercise=H.exercise||{}; H.stand=H.stand||{};
   const end=new Date(d.end+"T12:00"); let n=0;
   const put=(key,arr,ok,fix)=>{ if(!Array.isArray(arr)) return; arr.forEach((v,i)=>{ v=+v; if(!isFinite(v)||!ok(v)) return; H[key][dkey(addDays(end,i-arr.length+1))]=fix?fix(v):Math.round(v*10)/10; n++; }); };
   put("weight",d.weight,v=>v>30&&v<300);
@@ -1307,6 +1354,8 @@ function importSync(d){
   put("water",d.water,v=>v>0,v=>Math.round(v<20?v*1000:v));
   put("energy",d.energy,v=>v>0,v=>Math.round(v));
   put("lift",d.workouts,v=>v>0,v=>Math.round(v));
+  put("exercise",d.exercise,v=>v>0,v=>Math.round(v));
+  put("stand",d.stand,v=>v>0,v=>Math.round(v));
   H.lastSync=Date.now(); save(); return n;
 }
 function afterSync(n){ toast(HX.synced(n)); renderToday(); passSel=null; liftSel=null; prefillWeek(); checkBadges(); }
@@ -1332,6 +1381,8 @@ function applyHealth(p,c,items,d){
   if(H.water[k]){ const g=Math.min(8,Math.round(H.water[k]/(c.water/8))); if(g>d.water) d.water=g; }
   const wi=items.findIndex(it=>it.title.startsWith("🚶"));
   if(wi>=0&&H.steps[k]>=c.steps&&!d.autoS){ d.autoS=1; if(!d.done.includes(wi)) d.done.push(wi); }
+  const cpH=cardioPlan(p), code=["SU","MO","TU","WE","TH","FR","SA"][new Date().getDay()];
+  if(cpH.days.includes(code)&&H.exercise&&H.exercise[k]>=cpH.mins&&!d.autoC){ d.autoC=1; d.walk=true; }
 }
 function renderHealth(){
   const H=state.health, el=$("#hkCard"); if(!el) return;
@@ -1345,18 +1396,186 @@ function renderHealth(){
       <div><span>${HX.steps}</span><strong>${f(H.steps[k])}</strong><small>${HX.stepsU}</small></div>
       <div><span>${HX.energy}</span><strong>${f(H.energy[k])}</strong><small>kcal</small></div>
       <div><span>${HX.water}</span><strong>${H.water[k]?(H.water[k]/1000).toFixed(1):"–"}</strong><small>L</small></div>
+      <div><span>${HX.exercise}</span><strong>${f(H.exercise&&H.exercise[k])}</strong><small>${HX.exU}</small></div>
+      <div><span>${HX.stand}</span><strong>${f(H.stand&&H.stand[k])}</strong><small>${HX.standU}</small></div>
     </div>
     <div class="row"><button class="btn ghost block" data-sync>${HX.syncAgain}</button></div>`;
 }
 function healthWeek(){
   const H=state.health; if(!H) return null;
-  const ws=[], lifts=[]; for(let i=0;i<7;i++){ const k=dkey(addDays(new Date(),-i)); if(H.weight[k]) ws.push(H.weight[k]); if(H.lift[k]) lifts.push(k); }
+  const ws=[], lifts=[], P=state.profile; for(let i=0;i<7;i++){ const dt=addDays(new Date(),-i), k=dkey(dt), code=["SU","MO","TU","WE","TH","FR","SA"][dt.getDay()]; if(H.weight[k]) ws.push(H.weight[k]); if(H.lift[k]||(P&&P.days.includes(code)&&H.exercise&&H.exercise[k]>=20)) lifts.push(k); }
   return {avg:ws.length>=3?Math.round(avg(ws)*10)/10:null, n:ws.length, lifts:lifts.length};
 }
 document.addEventListener("click",e=>{
   if(e.target.closest("[data-sync]")) doSync();
   if(e.target.closest("[data-sync-guide]")) openSheet(`<div style="text-align:left">${HX.guide}<div class="row"><button class="btn" data-close>${UI.close}</button></div></div>`);
 });
+
+const BK={noData:"ยังไม่มีข้อมูลให้สำรอง",shareTitle:"ไฟล์สำรองลดทีละด่าน",done:"สำรองข้อมูลแล้ว ✦",copied:"คัดลอกข้อมูลสำรองแล้ว",copy:"คัดลอก",
+ fallbackTitle:"สำรองข้อมูล",fallbackHint:"ถ้าไฟล์ไม่ถูกบันทึก ให้คัดลอกข้อความนี้ไปเก็บในแอป Notes หรือส่งให้ตัวเองในแชท",
+ bad:"อ่านไฟล์สำรองไม่ได้ ตรวจว่าเป็นไฟล์จากแอปนี้",confirm:"ข้อมูลในเครื่องตอนนี้จะถูกแทนที่ด้วยไฟล์สำรอง ดำเนินการต่อ?",restored:"กู้คืนข้อมูลแล้ว ✦",
+ restoreTitle:"กู้คืนข้อมูล",restoreHint:"เลือกไฟล์สำรองที่เคยบันทึกไว้ในแอป Files หรือ iCloud Drive",pickFile:"เลือกไฟล์สำรอง",orPaste:"หรือวางข้อความสำรองที่เคยคัดลอกไว้",restoreBtn:"กู้คืนจากข้อความ",
+ last:d=>`สำรองล่าสุด ${d}`,never:"ยังไม่เคยสำรองข้อมูล"};
+/* ---------- profile backup & restore ---------- */
+try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+function backupPayload(){ return JSON.stringify({app:"ladteedan",v:1,exported:new Date().toISOString(),data:state}); }
+async function doBackup(){
+  if(!state.profile){ toast(BK.noData); return; }
+  state.lastBackup=Date.now(); save();
+  const txt=backupPayload(), name=`ladteedan-backup-${dkey()}.json`;
+  let file=null; try{ file=new File([txt],name,{type:"application/json"}); }catch(e){}
+  try{ if(file&&navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:BK.shareTitle}); toast(BK.done); renderBackup(); return; } }catch(e){ if(e&&e.name==="AbortError"){ return; } }
+  try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"})); a.download=name; document.body.appendChild(a); a.click(); a.remove(); }catch(e){}
+  openSheet(`<div style="text-align:left"><h2>${BK.fallbackTitle}</h2><p class="legend">${BK.fallbackHint}</p>
+    <textarea readonly id="bkOut">${escH(txt)}</textarea><div class="row"><button class="btn" id="bkCopy">${BK.copy}</button><button class="btn ghost" data-close>${UI.close}</button></div></div>`);
+  $("#bkCopy").onclick=()=>copy(txt,BK.copied); renderBackup();
+}
+function restoreFrom(txt){
+  let o; try{ const t=String(txt), a=t.indexOf("{"), b=t.lastIndexOf("}"); o=JSON.parse(t.slice(a,b+1)); }catch(e){ return BK.bad; }
+  const d=o&&o.data&&o.data.profile?o.data:(o&&o.profile?o:null);
+  if(!d) return BK.bad;
+  if(state.profile&&!confirm(BK.confirm)) return "";
+  try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){ return BK.bad; }
+  toast(BK.restored); setTimeout(()=>location.reload(),600); return "";
+}
+function openRestore(){
+  openSheet(`<div style="text-align:left"><h2>${BK.restoreTitle}</h2><p class="legend">${BK.restoreHint}</p>
+    <div class="row"><button class="btn" id="rsFile">${BK.pickFile}</button></div>
+    <input type="file" id="rsInput" accept=".json,.txt,application/json,text/plain" class="hidden">
+    <p class="legend" style="margin-top:16px">${BK.orPaste}</p><textarea id="rsText" spellcheck="false"></textarea>
+    <div class="err" id="rsErr"></div>
+    <div class="row"><button class="btn ghost" id="rsGo">${BK.restoreBtn}</button><button class="btn ghost" data-close>${UI.close}</button></div></div>`);
+  $("#rsFile").onclick=()=>$("#rsInput").click();
+  $("#rsInput").onchange=async e=>{ const f=e.target.files[0]; if(!f) return; $("#rsErr").textContent=restoreFrom(await f.text()); };
+  $("#rsGo").onclick=()=>{ $("#rsErr").textContent=restoreFrom($("#rsText").value); };
+}
+function renderBackup(){
+  const el=$("#bkInfo"); if(el) el.textContent=state.lastBackup?BK.last(new Date(state.lastBackup).toLocaleDateString(TX.locale,{day:"numeric",month:"short",year:"numeric"})):BK.never;
+  const nb=$("#bkNudge"); if(!nb) return;
+  const old=!state.lastBackup||Date.now()-state.lastBackup>7*864e5, used=state.profile&&Date.now()-(state.profile.created||Date.now())>3*864e5;
+  nb.classList.toggle("hidden",!(old&&used));
+}
+document.addEventListener("click",e=>{
+  if(e.target.closest("[data-backup]")) doBackup();
+  if(e.target.closest("[data-restore]")) openRestore();
+});
+
+const MFX={title:"manifest ของฉัน",hint:"เขียนประโยคที่อยากบอกตัวเองทุกวัน จะขึ้นในหน้า \"วันนี้\" และในการ์ดลงสตอรี่",
+ ph:"เช่น ฉันแข็งแรงขึ้นทุกวัน",add:"เพิ่ม",tips:"เขียนเป็นปัจจุบัน เชิงบวก และเป็นเรื่องที่เธอทำได้เอง เช่น \"ฉันเลือกดูแลตัวเองวันนี้\" ดีกว่า \"ฉันต้องผอม\"",
+ empty:"ยังไม่มี manifest ของเธอ ตอนนี้แอปใช้ประโยคของแอปไปก่อน",del:"ลบ",modeTitle:"แสดงผลแบบไหน",mine:"ของฉันอย่างเดียว",mix:"ผสมกับของแอป",
+ done:"เสร็จแล้ว",added:"เพิ่ม manifest แล้ว ✦",label:"manifest ของฉัน ✦",write:"เขียนเอง",edit:"แก้ไข manifest",menu:"manifest ของฉัน"};
+/* ---------- my own manifests ---------- */
+function mfList(){ const mine=(state.manifests||[]).filter(Boolean); if(!mine.length) return {list:UI.MF,mine:false};
+  return {list:state.mfMode==="mix"?mine.concat(UI.MF):mine,mine:true}; }
+function currentMF(){ const {list}=mfList(), doy=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5);
+  return list[((doy+(state.mfShift||0))%list.length+list.length)%list.length]; }
+function openMfEditor(){
+  const draw=()=>{ const mine=state.manifests||[];
+    $("#mfItems").innerHTML=mine.length?mine.map((t,i)=>`<li><span>${escH(t)}</span><button data-mf-del="${i}" aria-label="${MFX.del}">×</button></li>`).join(""):`<li class="empty">${MFX.empty}</li>`;
+    document.querySelectorAll("#mfMode button").forEach(b=>b.setAttribute("aria-pressed",(state.mfMode||"mine")===b.dataset.m));
+    $("#mfModeWrap").classList.toggle("hidden",!mine.length); };
+  openSheet(`<div style="text-align:left"><h2>${MFX.title}</h2><p class="legend">${MFX.hint}</p>
+    <div class="mf-add"><input id="mfNew" type="text" maxlength="80" placeholder="${MFX.ph}"><button class="btn" id="mfAdd">${MFX.add}</button></div>
+    <p class="legend" style="margin-top:6px">${MFX.tips}</p>
+    <ul class="mf-list" id="mfItems"></ul>
+    <div id="mfModeWrap"><h3>${MFX.modeTitle}</h3><div class="seg" id="mfMode"><button data-m="mine">${MFX.mine}</button><button data-m="mix">${MFX.mix}</button></div></div>
+    <div class="row"><button class="btn ghost" data-close>${MFX.done}</button></div></div>`);
+  draw();
+  const add=()=>{ const v=$("#mfNew").value.trim(); if(!v) return; state.manifests=state.manifests||[]; state.manifests.push(v.slice(0,80));
+    state.mfShift=state.manifests.length-1+(state.mfMode==="mix"?0:0); $("#mfNew").value=""; save(); draw(); renderToday(); toast(MFX.added); };
+  $("#mfAdd").onclick=add; $("#mfNew").onkeydown=e=>{ if(e.key==="Enter") add(); };
+  $("#mfItems").onclick=e=>{ const b=e.target.closest("[data-mf-del]"); if(!b) return; state.manifests.splice(+b.dataset.mfDel,1); save(); draw(); renderToday(); };
+  $("#mfMode").onclick=e=>{ const b=e.target.closest("[data-m]"); if(!b) return; state.mfMode=b.dataset.m; save(); draw(); renderToday(); };
+  setTimeout(()=>$("#mfNew").focus(),350);
+}
+document.addEventListener("click",e=>{ if(e.target.closest("[data-mf-edit]")) openMfEditor(); });
+
+const CX={
+ types:[[{n:"เดินเร็ว (ข้างนอกหรือในห้าง)",m:4.3},{n:"เดินขึ้นลงบันไดช้า ๆ",m:4.0},{n:"เต้นแอโรบิกเบา ๆ ตามคลิป",m:5.0}],
+        [{n:"เดินเร็ว (ข้างนอกหรือในห้าง)",m:4.3},{n:"เดินขึ้นลงบันไดช้า ๆ",m:4.0},{n:"เต้นแอโรบิกเบา ๆ ตามคลิป",m:5.0}],
+        [{n:"เดินชันบนลู่วิ่ง (ชัน 8–12%)",m:6.0},{n:"จักรยานอยู่กับที่ แรงปานกลาง",m:6.8},{n:"เครื่องเดินวงรี (Elliptical)",m:5.0}]],
+ zone:"ชีพจร Zone 2",perWeek:"คาร์ดิโอต่อสัปดาห์",minOf:t=>`นาที (เป้าระยะยาว ${t}+)`,perSession:"ต่อครั้ง",min:"นาที",times:"ครั้งต่อสัปดาห์",burn:"เผาผลาญ",perTime:"ต่อครั้ง (ประมาณ)",
+ howTitle:"ความหนักที่ใช่",feel:"ความรู้สึก",talk:"หายใจแรงขึ้น ยังพูดเป็นประโยคได้ แต่ร้องเพลงไม่ไหว",
+ watch:cp=>`เปิดแอป Workout บน Apple Watch ระหว่างเล่นให้ปัดไปหน้าจอ Heart Rate Zones แล้วรักษาชีพจรไว้ที่ ${cp.z2[0]}–${cp.z2[1]} bpm`,
+ weekTitle:"ตารางคาร์ดิโอของสัปดาห์",afterLift:cp=>`หลังเวท เดินเบา ๆ ${cp.post} นาที`,restDay:"พักจริง ยืดเหยียด 10 นาที",
+ optsTitle:"เลือกแบบที่ชอบได้",
+ notes:cp=>`<p><strong>ค่อย ๆ เพิ่ม</strong> สัปดาห์ไหนทำคาร์ดิโอครบตามแผน ครั้งต่อไปเพิ่ม 5 นาที จนถึง 45 นาทีต่อครั้ง</p><p><strong>เล่นเวทก่อนคาร์ดิโอ</strong> ถ้าทำวันเดียวกัน และเลี่ยงคาร์ดิโอหนักก่อนวันเล่นขา ช่วงลดน้ำหนัก HIIT ไม่จำเป็น</p><p><strong>ไม่ต้องกินชดเชย</strong> เป้าแคลอรี่รวมการออกกำลังกายไว้แล้ว ตัวเลขเผาผลาญเป็นค่าประมาณเพื่อให้เห็นภาพ</p><p class="legend">ชีพจรคำนวณจากอายุ (208 − 0.7 × อายุ = ${cp.hrMax} bpm) เป็นค่าประมาณ ถ้ามีโรคหัวใจ ความดัน หรือกินยาที่มีผลต่อชีพจร ให้ใช้ความรู้สึกแทนตัวเลข และปรึกษาแพทย์ก่อนเพิ่มความหนัก</p>`,
+ todayTitle:cp=>`คาร์ดิโอ ${cp.mins} นาที`,zoneLine:cp=>`Zone 2 ชีพจร ${cp.z2[0]}–${cp.z2[1]} bpm หรือยังพูดเป็นประโยคได้`,
+ doneBtn:cp=>`ทำครบ ${cp.mins} นาทีแล้ว`,restTitle:"วันนี้พัก",restLine:"พักจริง ยืดเหยียด 10 นาที เดินเล่นได้ตามสบาย",
+ postLine:cp=>`หลังเล่นเสร็จ เดินเบา ๆ ต่ออีก ${cp.post} นาที`,walkLine:cp=>`${cp.type.n} ${cp.mins} นาที`,
+ icsTitle:cp=>`🚶 คาร์ดิโอ ${cp.mins} นาที`,icsRest:"😌 วันพัก ยืดเหยียด",changeLabel:"คาร์ดิโอต่อครั้ง (นาที)"};
+/* ---------- cardio plan ---------- */
+function cardioPlan(p){
+  const hrMax=Math.round(208-0.7*p.age), z2=[Math.round(hrMax*.6),Math.round(hrMax*.7)];
+  const others=DAYS.map(d=>d[0]).filter(d=>!p.days.includes(d));
+  const n=Math.max(0,others.length-1), days=others.slice(0,n), rest=others.slice(n);
+  const base=p.activity<=1.2?20:p.activity<=1.375?25:30;
+  const mins=Math.min(45,(state.cardio&&state.cardio.mins)||base);
+  const W=p.weight, kc=m=>Math.round(m*3.5*W/200*mins/5)*5;
+  const alts=CX.types[p.equip||0].map(t=>({n:t.n,kcal:kc(t.m)}));
+  const post=days.length<2&&p.days.length?12:0;
+  return {hrMax,z2,days,rest,mins,type:CX.types[p.equip||0][0],kcal:alts[0].kcal,alts,post,weekly:mins*days.length+post*p.days.length,target:150};
+}
+function renderCardio(p){
+  const el=$("#cardio"); if(!el) return; const cp=cardioPlan(p);
+  const row=code=>{ const dn=dayName(code);
+    if(cp.days.includes(code)) return `<li><time>${dn}</time><div><strong>${CX.walkLine(cp)}</strong><br><span class="legend">${CX.zoneLine(cp)}</span></div></li>`;
+    if(p.days.includes(code)) return cp.post?`<li><time>${dn}</time><div>${CX.afterLift(cp)}</div></li>`:"";
+    return `<li><time>${dn}</time><div class="legend">${CX.restDay}</div></li>`; };
+  el.innerHTML=`<div class="targets">
+      <div class="t"><span>${CX.zone}</span><strong>${cp.z2[0]}–${cp.z2[1]}</strong><small>bpm</small></div>
+      <div class="t"><span>${CX.perWeek}</span><strong>${cp.weekly}</strong><small>${CX.minOf(cp.target)}</small></div>
+      <div class="t"><span>${CX.perSession}</span><strong>${cp.mins}</strong><small>${CX.min}, ${cp.days.length} ${CX.times}</small></div>
+      <div class="t"><span>${CX.burn}</span><strong>~${cp.kcal}</strong><small>kcal ${CX.perTime}</small></div>
+    </div>
+    <h3>${CX.howTitle}</h3>
+    <ul class="plan"><li><time>${CX.feel}</time><div>${CX.talk}</div></li><li><time>Watch</time><div>${CX.watch(cp)}</div></li></ul>
+    <h3>${CX.weekTitle}</h3>
+    <ul class="plan">${DAYS.map(d=>row(d[0])).join("")}</ul>
+    <h3>${CX.optsTitle}</h3>
+    <ul class="eq">${cp.alts.map(a=>`<li>${a.n} <span class="legend">~${a.kcal} kcal / ${cp.mins} ${CX.min}</span></li>`).join("")}</ul>
+    <div class="note prot-tips">${CX.notes(cp)}</div>`;
+}
+function cardioWeekDone(p){
+  const cp=cardioPlan(p); let n=0;
+  for(let i=0;i<7;i++){ const dt=addDays(new Date(),-i), v=(state.daily||{})[dkey(dt)], code=["SU","MO","TU","WE","TH","FR","SA"][dt.getDay()];
+    if(v&&v.walk&&cp.days.includes(code)) n++; }
+  return {n,planned:cp.days.length,mins:cp.mins};
+}
+
+TX.change.cardio=CX.changeLabel;
+const WG={go:"ดูผลสัปดาห์นี้ ✨",lockedBtn:d=>`เช็กอินได้ ${d}`,soFar:"สัปดาห์นี้จนถึงตอนนี้",days:"วันที่ผ่าน",times:"ครั้ง",noHealth:"ยังไม่ซิงก์",
+ why:n=>`ต้องมีข้อมูลครบ 7 วันก่อน ผลถึงจะแม่นและแผนไม่เปลี่ยนเร็วเกินไป อีก ${n} วันเช็กอินได้`,undo:"กดผิด? ยกเลิกเช็กอินนี้",undone:"ยกเลิกเช็กอินแล้ว แผนกลับเป็นแบบเดิม"};
+/* ---------- weekly check-in gate + undo ---------- */
+let lastSnap=null;
+function weekGate(){
+  const h=state.history||[], p=state.profile; if(!p) return {open:true};
+  const last=h.length?new Date(h[h.length-1].date+"T12:00"):new Date(p.created||Date.now());
+  const days=Math.floor((Date.now()-last)/864e5);
+  return {open:days>=6, next:addDays(last,7), left:Math.max(1,6-days)};
+}
+function renderGate(){
+  const g=weekGate(), btn=$("#analyzeSimple"), box=$("#weekGate"); if(!btn||!box) return;
+  btn.disabled=!g.open; btn.classList.toggle("off",!g.open);
+  const pnl=$("#avgIn").closest(".panel"); if(pnl) pnl.classList.toggle("gated",!g.open);
+  if(g.open){ box.classList.add("hidden"); btn.textContent=WG.go; return; }
+  btn.textContent=WG.lockedBtn(g.next.toLocaleDateString(TX.locale,{weekday:"short",day:"numeric",month:"short"}));
+  const D=state.daily||{}; let pass=0,lifts=0,days=0; const hw=healthWeek();
+  for(let i=0;i<7;i++){ const v=D[dkey(addDays(new Date(),-i))]; if(!v) continue; days++; if(ratio(v)>=.6) pass++; if(v.exN&&v.ex.length>=Math.ceil(v.exN/2)) lifts++; }
+  if(hw&&hw.lifts>lifts) lifts=hw.lifts;
+  box.classList.remove("hidden");
+  box.innerHTML=`<span>${WG.soFar}</span><div class="rp-stats" style="margin-top:8px">
+    <div><span>Checklist</span><strong>${pass}<em>/7</em></strong><small>${WG.days}</small></div>
+    <div><span>${TX.lifts}</span><strong>${lifts}<em>/${state.profile.days.length}</em></strong><small>${WG.times}</small></div>
+    <div><span>${TX.avg}</span><strong>${hw&&hw.avg?hw.avg:"–"}</strong><small>${hw&&hw.avg?"kg":WG.noHealth}</small></div></div>
+    <p class="legend" style="margin-top:10px">${WG.why(g.left)}</p>`;
+}
+function undoCheckin(){
+  if(!lastSnap) return;
+  state.history.pop(); state.profile=lastSnap.profile; state.adj=lastSnap.adj; state.cardio=lastSnap.cardio||undefined;
+  lastSnap=null; save(); render(); renderHist(); $("#resultOut").innerHTML=""; renderGate(); toast(WG.undone);
+}
+document.addEventListener("click",e=>{ if(e.target.closest("[data-undo]")) undoCheckin(); });
 
 chipify(); load(); hashSync(); window.addEventListener("hashchange",hashSync);
 if(state.profile){ fillForm(state.profile); syncChips(); render(); renderHist(); renderMonths(); show("today"); checkBadges(); }
