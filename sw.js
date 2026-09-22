@@ -1,6 +1,6 @@
 // Pages: network first (always newest when online, cached copy when offline).
 // Other files: cache first, refreshed in the background.
-const CACHE = "ladtee-v29";
+const CACHE = "ladtee-v31";
 const SHELL = ["./", "./index.html", "./th.html", "./en.html", "./manifest.webmanifest", "./smile-180.png", "./smile-192.png", "./smile-512.png", "./smile-maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
