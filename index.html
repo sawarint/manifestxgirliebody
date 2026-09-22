@@ -8,7 +8,8 @@
 <title>Stepdown</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&display=swap"></noscript>
 <link rel="manifest" href="manifest.webmanifest?v=26">
 <link rel="apple-touch-icon" href="smile-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="smile-192.png">
@@ -475,7 +476,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
       <button id="resetAll" class="danger">Erase all data</button>
     </div>
   </section>
-  <p class="legend ver">Version 31</p>
+  <p class="legend ver">Version 34</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>Today</button>
@@ -1600,7 +1601,6 @@ function doPasteSync(){
     if(!quiet) err.innerHTML=`${syncProblem(v)}${String(v).trim()?`<br><span class="legend">${HX.got}: <code>${escH(String(v).slice(0,160))}</code></span>`:""}`; return false; };
   box.addEventListener("input",()=>{ if(box.value.trim().length>8) tryImport(box.value,true); });
   $("#syncGo").onclick=()=>tryImport(box.value,false);
-  try{ if(navigator.clipboard&&navigator.clipboard.readText) navigator.clipboard.readText().then(t=>{ if(t&&!tryImport(t,true)){ box.value=t; tryImport(t,false); } }).catch(()=>{}); }catch(e){}
 }
 document.addEventListener("click",e=>{ if(e.target.closest("[data-copy-tpl]")) copy('{"weight":[W],"steps":[S],"exercise":[X]}',HX.copied); });
 const SX={title:"Auto sync, no pasting",intro:"Add the sync server address once, and the Shortcut sends your data straight to the app. One tap on Sync, or set an Automation to run every morning and the app pulls new data every time you open it.",
@@ -1633,9 +1633,11 @@ function pollAfterReturn(){
   let tries=0; const tick=async()=>{ if(await pullRelay(true)) return; if(++tries<10) setTimeout(tick,2000); else { state.syncPending=0; save(); toast(SX.nothing); } }; tick();
 }
 function doSync(){
-  if(!relayURL()){ doPasteSync(); return; }
-  state.syncPending=Date.now(); save(); toast(SX.running);
-  setTimeout(()=>{ location.href="shortcuts://run-shortcut?name="+encodeURIComponent("Stepdown sync"); },300);
+  // 1) read the clipboard first, inside the tap, exactly like the first version
+  let p=null; try{ if(navigator.clipboard&&navigator.clipboard.readText) p=navigator.clipboard.readText(); }catch(e){}
+  const next=()=>{ if(relayURL()){ state.syncPending=Date.now(); save(); toast(SX.running); setTimeout(()=>{ location.href="shortcuts://run-shortcut?name="+encodeURIComponent("Stepdown sync"); },300); } else doPasteSync(); };
+  if(!p){ next(); return; }
+  p.then(t=>{ const d=parseSync(t); if(d) afterSync(importSync(d)); else next(); }).catch(next);
 }
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(state.syncPending) pollAfterReturn(); else pullRelay(true); } });
 function relaySetupHTML(){
@@ -1653,7 +1655,7 @@ document.addEventListener("click",e=>{
 });
 
 chipify(); load(); hashSync(); setTimeout(()=>{ if(state.syncPending) pollAfterReturn(); else pullRelay(true); },800); window.addEventListener("hashchange",hashSync);
-if(state.profile){ fillForm(state.profile); syncChips(); render(); renderHist(); renderMonths(); show("today"); checkBadges(); }
+if(state.profile){ fillForm(state.profile); syncChips(); show("today"); (window.requestIdleCallback||setTimeout)(()=>{ render(); renderHist(); renderMonths(); checkBadges(); }); }
 else { render(); openOb(); }
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
 })();
