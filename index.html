@@ -298,12 +298,22 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}.ob-step.on,.sheet-body{animation:none}}
 .ver{text-align:center;margin-top:24px}
+.exrow{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.exrow:last-child{border-bottom:0}
+.ck-btn{border:0;background:none;padding:0;cursor:pointer}
+.exrow .ck{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--pink2);transition:background .2s}
+.exrow.on .ck{background:var(--rose);border-color:var(--rose)}
+.exrow.on .ck::after{content:"";display:block;width:9px;height:5px;border-left:2px solid var(--on-rose);border-bottom:2px solid var(--on-rose);transform:rotate(-45deg) translate(1px,-1px);margin:auto}
+.exrow b{display:block;font-weight:500;font-size:15.5px;line-height:1.35}
+.exrow small{display:block;font-size:12.5px;color:var(--muted)}
+.exrow.on b{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.logchip{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;font:600 13px var(--body);cursor:pointer;white-space:nowrap}
+#restBtn{margin-top:12px;width:100%}
+.warmline{font-size:13px;color:var(--muted);margin:-4px 0 10px}
+
 .wt-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
 .wt-now strong{font:700 40px/1 var(--head)}
 .wt-now small{color:var(--muted);margin-left:6px}
-#hkCard{padding:14px 20px}
-#hkCard .hkline{display:flex;justify-content:space-between;align-items:center;gap:10px}
-#hkCard .hkline span{font-size:13.5px;color:var(--muted)}
 
 .danger-link{color:var(--muted)}
 .tpl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:4px 0 6px}
@@ -384,7 +394,6 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
     <div class="focus hidden" id="focusBar"></div>
     <div class="focus hidden" id="bkNudge" style="grid-template-columns:1fr auto"><span>Your data lives only on this device</span><b>Back up this week</b><button class="btn ghost" data-backup style="padding:8px 14px">Back up</button></div>
     <div class="panel" id="wtCard"></div>
-    <div class="panel" id="hkCard"></div>
     <div class="panel"><div class="cardhead"><h2>Today's checklist</h2><b id="todoCount"></b></div><div id="todo"></div></div>
     <div class="panel"><div class="cardhead"><h2>Water 💧</h2><b id="waterCount"></b></div><div class="glasses" id="water"></div></div>
     <div class="panel"><div class="cardhead"><h2>Today's protein</h2><b id="protCount"></b></div><div class="pills" id="protToday"></div></div>
@@ -483,7 +492,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
     </div>
     <button id="shareMe" class="hidden"></button><button id="resetAll" class="hidden"></button>
   </section>
-  <p class="legend ver">Version 37</p>
+  <p class="legend ver">Version 39</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>Today</button>
@@ -746,7 +755,7 @@ function renderWorkout(p){
   $("#workout").innerHTML=DAYS.map(([c,t])=>{
     if(w.lift[c]){ const s=w.lift[c];
       return `<details ${first===c?"open":""}><summary><strong>${t}</strong> Lift: ${s.title}</summary>
-        <ul class="plan">${s.ex.map(e=>`<li><time>${e.dose}</time><div>${e.name}</div></li>`).join("")}${(()=>{const cp=cardioPlan(p);return cp.fin[c]?`<li><time>${cp.fin[c]} ${CX.min}</time><div>${CX.finTitle} <span class="legend">${CX.zoneLine(cp)}</span></div></li>`:"";})()}</ul></details>`; }
+        <p class="warmline">${LX.warm}</p><ul class="plan">${s.ex.map(e=>`<li><time>${e.dose}</time><div>${e.name}${liftLog()[e.name]?`<br><span class="legend">${LX.last(liftLog()[e.name].kg,liftLog()[e.name].reps)}</span>`:""}</div></li>`).join("")}${(()=>{const cp=cardioPlan(p);return cp.fin[c]?`<li><time>${cp.fin[c]} ${CX.min}</time><div>${CX.finTitle} <span class="legend">${CX.zoneLine(cp)}</span></div></li>`:"";})()}</ul></details>`; }
     return `<div class="rest"><strong>${t}</strong> <span class="legend">${w.cardio[c]==="WALK"?CX.walkLine(cardioPlan(p)):CX.restLine}</span></div>`;
   }).join("");
 }
@@ -1114,7 +1123,7 @@ function todayCode(){ return ["SU","MO","TU","WE","TH","FR","SA"][new Date().get
 function dayNumber(p){ return Math.max(1,Math.floor((Date.now()-(p.created||Date.now()))/864e5)+1); }
 function renderToday(){
   const p=state.profile; if(!p) return;
-  const c=calc(p), items=dailyItems(p,c), d=day(); d.n=items.length; applyHealth(p,c,items,d);
+  const c=calc(p), items=dailyItems(p,c), d=day(); d.n=items.length;
   const wp=workoutPlan(p), code=todayCode(), lift=wp.lift[code];
   const pp=proteinPlan(p,c,!!lift); d.protN=pp.meals.length;
   const st=streakInfo(), ms=milestones(p)[0], left=Math.max(0,Math.round((p.weight-ms.kg)*10)/10);
@@ -1135,11 +1144,12 @@ function renderToday(){
   $("#protToday").innerHTML=pp.meals.map(m=>`<button class="pill ${d.prot.includes(m.key)?"on":""}" data-pk="${m.key}">${PNAME[m.key]} <b>${m.g}g</b></button>`).join("");
   if(lift){ d.exN=lift.ex.length;
     $("#wkToday").innerHTML=`<div class="cardhead"><h2>${UI.liftToday(lift.short)}</h2><b>${d.ex.length}/${lift.ex.length}</b></div><p class="legend" style="margin-top:-6px">${UI.liftSub(lift.ex.length,p.mins)}<br>${fmt12(toMin(p.wtime))}</p>
-      <div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i); return `<button class="todo ${on?"on":""}" data-ex="${i}" aria-pressed="${on}"><span class="ck"></span><span class="tt"><b>${e.name}</b></span><time>${e.dose}</time></button>`; }).join("")}</div>`; }
+      <p class="warmline">${LX.warm}</p><div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i), L=liftLog()[e.name];
+        return `<div class="exrow ${on?"on":""}"><button class="ck-btn" data-ex="${i}" aria-pressed="${on}" aria-label="${e.name}"><span class="ck"></span></button><div><b>${e.name}</b><small>${exMeta(p,e.name,e.dose)}</small></div><button class="logchip" data-log="${escH(e.name)}" data-dose="${escH(e.dose)}">${L?`${L.kg} × ${L.reps}`:LX.logBtn}</button></div>`; }).join("")}</div>
+      <button class="btn ghost" id="restBtn">${LX.restStart(90)}</button>`; }
   else { d.exN=0; const cp=cardioPlan(p), isC=cp.days.includes(code);
     $("#wkToday").innerHTML=isC?`<div class="cardhead"><h2>${CX.todayTitle(cp)}</h2><b>~${cp.kcal} kcal</b></div><p class="legend" style="margin-top:-6px">${CX.zoneLine(cp)}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${CX.doneBtn(cp)}</b><small>${cp.type.n}</small></span></button></div>`
       :`<div class="cardhead"><h2>${CX.restTitle}</h2></div><p class="legend">${CX.restLine}</p><div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${UI.restBtn}</b></span></button></div>`; }
-  if(lift&&state.health&&state.health.lift[dkey()]) $("#wkToday").insertAdjacentHTML("beforeend",`<p class="hk-ok">${HX.watchLift}</p>`);
   if(lift){ const cpL=cardioPlan(p), fm=cpL.fin[code]||0;
     if(fm) $("#wkToday").insertAdjacentHTML("beforeend",`<div class="exlist"><button class="todo ${d.walk?"on":""}" data-walk="1" aria-pressed="${d.walk}"><span class="ck"></span><span class="tt"><b>${CX.finDone(fm)}</b><small>${CX.zoneLine(cpL)}</small></span></button></div><p class="legend" style="margin-top:8px">${CX.total(p.mins,fm)}</p>`); }
   const fs=focusStatus(d,!!lift);
@@ -1147,7 +1157,7 @@ function renderToday(){
   if(fs) $("#focusBar").innerHTML=`<span>${MX.focusBar}</span><b>${fs.label}</b><em class="${fs.done?"ok":""}">${fs.state}</em>`;
   $("#moods").innerHTML=UI.moods.map(m=>`<button data-mood="${m}" aria-pressed="${d.mood===m}">${m}</button>`).join("");
   if(document.activeElement!==$("#dayNote")) $("#dayNote").value=d.note||"";
-  renderWeightCard(); renderHealth(); renderBackup(); save();
+  renderWeightCard(); renderBackup(); save();
 }
 $("#today").addEventListener("click",e=>{
   const t=e.target.closest("[data-i],[data-g],[data-pk],[data-ex],[data-walk],[data-mood],#mfNext,#shareDay"); if(!t) return;
@@ -1225,7 +1235,7 @@ function prefillWeek(){
   const D=state.daily||{}; let pass=0, lifts=0, any=false;
   for(let i=0;i<7;i++){ const v=D[dkey(addDays(new Date(),-i))]; if(!v) continue; any=true; if(ratio(v)>=0.6) pass++; if(v.exN&&v.ex.length>=Math.ceil(v.exN/2)) lifts++; }
   const hw=healthWeek();
-  if(hw){ if(hw.lifts>lifts) lifts=hw.lifts; if(hw.avg&&!$("#avgIn").value){ $("#avgIn").value=hw.avg; $("#prefillNote").textContent=HX.fromHealth(hw.n); any=true; } }
+  if(hw){ if(hw.lifts>lifts) lifts=hw.lifts; if(hw.avg&&!$("#avgIn").value){ $("#avgIn").value=hw.avg; $("#prefillNote").textContent=WT.fromLog(hw.n); any=true; } }
   $("#prefillNote").classList.toggle("hidden",!any); if(!any) return;
   const setChip=(box,n)=>document.querySelectorAll(box+" button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n===n));
   if(passSel===null){ passSel=pass; setChip("#passChips",pass); }
@@ -1333,69 +1343,12 @@ function focusStatus(d,isLift){
 }
 $("#openMonth").addEventListener("click",openMonth);
 
-const HX={exercise:"Exercise",exU:"min",stand:"Stand",standU:"hr",title:"From Apple Health",intro:"Pulls in your weight, steps, and exercise minutes.",
- syncBtn:"Sync now",setupBtn:"How to set up",syncAgain:"Sync again",weight:"Weight",steps:"Steps",stepsU:"steps",energy:"Active",water:"Water",
- synced:n=>`Synced ${n} entries from Health ✦`,pasteTitle:"Sync from Health",pasteHint:"No data found on your clipboard. Run the \"Stepdown sync\" Shortcut first, then tap sync again, or paste the text below.",
- importBtn:"Import",guideBtn:"How to build the Shortcut",bad:"Couldn't read that. Check the text has end and a date in it.",got:"What we received",
- fromHealth:n=>`Average of the ${n} weights you logged`,watchLift:"Apple Watch logged a workout today ✓",
- guide:`<h2>One-time sync setup</h2>
-<p class="legend">In the Shortcuts app, tap +, name it "Stepdown sync", and add these 5 actions. It takes under 5 minutes.</p>
-<ol class="guide">
-<li><b>Weight</b> Add <em>Find Health Samples</em>, tap Type and choose <em>Weight</em>. Tap &gt; for more options and set Start Date = <em>is in the last 14 days</em>, Group By = <em>Day</em>, Sort by = <em>Start Date</em>, Order = <em>Oldest First</em>, and turn on <em>Fill Missing</em> (if you see it) so the days line up.</li>
-<li><b>Steps</b> Long-press the first action, choose <em>Duplicate</em>, and change Type to <em>Steps</em>.</li>
-<li><b>Exercise ring</b> Duplicate again and change Type to <em>Exercise Minutes</em> (called Apple Exercise Time on some iPhones).</li>
-<li><b>Text</b> Add <em>Text</em>. Tap the copy button below and paste into the Text box. Delete the letter W and tap <em>Health Samples</em> (the first one) in the bar above the keyboard. Do the same for S with the second one and X with the third.</li>
-<li><b>Copy</b> Add <em>Copy to Clipboard</em>, then tap Done.</li>
-</ol>
-<div class="tpl"><code id="tplCode">{"weight":[W],"steps":[S],"exercise":[X]}</code><button class="btn ghost" data-copy-tpl>Copy template</button></div>
-<div class="note"><b>To sync:</b> run the Shortcut (tap Allow for everything the first time), open this app, tap "Sync now", and tap <em>Paste</em> when your iPhone asks. If it doesn't ask, long-press the box and paste. Your data comes in by itself.</div>
-<p class="legend" style="margin-top:12px">No date needed: the app assumes the data runs to today, and it reads numbers with units attached (like 67.4 kg). To run it daily, go to the Automation tab, pick Time of Day, and choose this Shortcut.</p>
-`};
 /* ---------- Apple Health sync (via Shortcut, no server) ---------- */
-function importSync(d){
-  const H=state.health=Object.assign({weight:{},steps:{},water:{},energy:{},lift:{},exercise:{},stand:{}},state.health||{}); H.exercise=H.exercise||{}; H.stand=H.stand||{};
-  const end=new Date(d.end+"T12:00"); let n=0;
-  const put=(key,arr,ok,fix)=>{ if(!Array.isArray(arr)) return; arr.forEach((v,i)=>{ v=+v; if(!isFinite(v)||!ok(v)) return; H[key][dkey(addDays(end,i-arr.length+1))]=fix?fix(v):Math.round(v*10)/10; n++; }); };
-  put("weight",d.weight,v=>v>30&&v<300);
-  put("steps",d.steps,v=>v>0,v=>Math.round(v));
-  put("water",d.water,v=>v>0,v=>Math.round(v<20?v*1000:v));
-  put("energy",d.energy,v=>v>0,v=>Math.round(v));
-  put("lift",d.workouts,v=>v>0,v=>Math.round(v));
-  put("exercise",d.exercise,v=>v>0,v=>Math.round(v));
-  put("stand",d.stand,v=>v>0,v=>Math.round(v));
-  H.lastSync=Date.now(); save(); return n;
-}
-function afterSync(n){ toast(HX.synced(n)); renderToday(); passSel=null; liftSel=null; prefillWeek(); checkBadges(); }
-function hashSync(){
-  if(!location.hash.startsWith("#sync=")) return;
-  const d=parseSync(decodeURIComponent(location.hash.slice(6)));
-  history.replaceState(null,"",location.pathname+location.search);
-  if(d&&state.profile) setTimeout(()=>afterSync(importSync(d)),300);
-}
-function applyHealth(p,c,items,d){
-  const H=state.health; if(!H) return;
-  const k=dkey();
-  if(H.weight[k]&&!d.autoW){ d.autoW=1; if(!d.done.includes(0)) d.done.push(0); }
-  if(H.water[k]){ const g=Math.min(8,Math.round(H.water[k]/(c.water/8))); if(g>d.water) d.water=g; }
-  const wi=items.findIndex(it=>it.title.startsWith("🚶"));
-  if(wi>=0&&H.steps[k]>=c.steps&&!d.autoS){ d.autoS=1; if(!d.done.includes(wi)) d.done.push(wi); }
-  const cpH=cardioPlan(p), code=["SU","MO","TU","WE","TH","FR","SA"][new Date().getDay()];
-  if(cpH.days.includes(code)&&H.exercise&&H.exercise[k]>=cpH.mins&&!d.autoC){ d.autoC=1; d.walk=true; }
-}
-function renderHealth(){
-  const el=$("#hkCard"); if(!el) return; const H=state.health;
-  const k=dkey(), st=H&&H.steps&&H.steps[k], ex=H&&H.exercise&&H.exercise[k];
-  el.innerHTML=`<div class="hkline"><span>Sync from Apple Health (if you set up the Shortcut)${st||ex?` — ${[st?`${Number(st).toLocaleString()} ${HX.stepsU}`:"",ex?`${ex} ${HX.exU}`:""].filter(Boolean).join(", ")}`:""}</span><button class="btn ghost" data-sync>${HX.syncBtn}</button></div>`;
-}
 function healthWeek(){
   const H=state.health; if(!H) return null;
   const ws=[], lifts=[], P=state.profile; for(let i=0;i<7;i++){ const dt=addDays(new Date(),-i), k=dkey(dt), code=["SU","MO","TU","WE","TH","FR","SA"][dt.getDay()]; if(H.weight[k]) ws.push(H.weight[k]); if(H.lift[k]||(P&&P.days.includes(code)&&H.exercise&&H.exercise[k]>=20)) lifts.push(k); }
   return {avg:ws.length?Math.round(avg(ws)*10)/10:null, n:ws.length, lifts:lifts.length};
 }
-document.addEventListener("click",e=>{
-  if(e.target.closest("[data-sync]")) doSync();
-  if(e.target.closest("[data-sync-guide]")) openSheet(`<div style="text-align:left">${HX.guide}<div class="row"><button class="btn" data-close>${UI.close}</button></div></div>`);
-});
 
 const BK={noData:"Nothing to back up yet",shareTitle:"Stepdown backup",done:"Backed up ✦",copied:"Backup copied",copy:"Copy",
  fallbackTitle:"Back up",fallbackHint:"If the file didn't save, copy this text and keep it in Notes, or send it to yourself in a chat.",
@@ -1568,92 +1521,7 @@ function undoCheckin(){
 document.addEventListener("click",e=>{ if(e.target.closest("[data-undo]")) undoCheckin(); });
 
 document.addEventListener("click",e=>{ const a=e.target.closest("[data-lang]"); if(a){ try{ localStorage.setItem("ldtd-lang",a.dataset.lang); }catch(_){} } });
-Object.assign(HX,{pasteTitle:"Sync from Health",pasteHint:"Run the \"Stepdown sync\" Shortcut first, then tap Paste when your iPhone asks, or long-press the box and paste.",pastePh:"Paste the Shortcut text here",pEmpty:"Nothing here yet. Run the Shortcut, then paste here.",pNotOurs:"That text isn't from the sync Shortcut. Run it again and paste.",pVars:"Your Text action still has the letters W, S, X. Delete them and tap Health Samples to insert the real values.",pNoData:"The Shortcut sent no numbers. Check you tapped Allow for Health, and that there's data in the last 14 days.",copied:"Template copied"});
-function parseSync(txt){
-  const t=String(txt||"");
-  const m=t.match(/"?end"?\s*[:=]\s*"?\s*(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/i);
-  let end=dkey();
-  if(m){ let y=+m[1]; if(y>2400) y-=543; end=`${y}-${String(m[2]).padStart(2,"0")}-${String(m[3]).padStart(2,"0")}`; }
-  const num=x=>{ x=String(x).trim().replace(/[^\d.,\-]/g,""); if(!x) return 0;
-    if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(x)) x=x.replace(/,/g,""); else if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(x)&&x.includes(",")) x=x.replace(/\./g,"").replace(",","."); else x=x.replace(",",".");
-    const v=parseFloat(x); return isFinite(v)?v:0; };
-  const arr=key=>{ const r=t.match(new RegExp('"?'+key+'"?\\s*[:=]\\s*\\[([^\\]]*)\\]','i')); if(!r) return undefined;
-    const body=r[1]; if(!body.trim()) return [];
-    const sep=body.includes(";")?";":/\n/.test(body)?/\r?\n/:",";
-    return body.split(sep).map(num); };
-  const d={end,weight:arr("weight"),steps:arr("steps"),water:arr("water"),energy:arr("energy"),workouts:arr("workouts"),exercise:arr("exercise"),stand:arr("stand")};
-  return Object.keys(d).some(k=>k!=="end"&&Array.isArray(d[k])&&d[k].some(v=>v>0))?d:null;
-}
-function syncProblem(t){
-  t=String(t||"").trim(); if(!t) return HX.pEmpty;
-  if(!/weight|steps|exercise/i.test(t)) return HX.pNotOurs;
-  if(/\[\s*[WSXAET]\s*\]/.test(t)) return HX.pVars;
-  if(/\[\s*\]/.test(t)) return HX.pNoData;
-  return HX.bad;
-}
-function doPasteSync(){
-  openSheet(`<div style="text-align:left"><h2>${HX.pasteTitle}</h2>
-    <p class="legend">${HX.pasteHint}</p>
-    <textarea id="syncIn" spellcheck="false" autocomplete="off" placeholder="${HX.pastePh}"></textarea>
-    <div class="err" id="syncErr"></div>
-    <div class="row"><button class="btn" id="syncGo">${HX.importBtn}</button><button class="btn ghost" data-sync-guide>${HX.guideBtn}</button></div></div>`);
-  const box=$("#syncIn"), err=$("#syncErr");
-  const tryImport=(v,quiet)=>{ const d=parseSync(v); if(d){ $("#sheet").classList.add("hidden"); afterSync(importSync(d)); return true; }
-    if(!quiet) err.innerHTML=`${syncProblem(v)}${String(v).trim()?`<br><span class="legend">${HX.got}: <code>${escH(String(v).slice(0,160))}</code></span>`:""}`; return false; };
-  box.addEventListener("input",()=>{ if(box.value.trim().length>8) tryImport(box.value,true); });
-  $("#syncGo").onclick=()=>tryImport(box.value,false);
-}
-document.addEventListener("click",e=>{ if(e.target.closest("[data-copy-tpl]")) copy('{"weight":[W],"steps":[S],"exercise":[X]}',HX.copied); });
-const SX={title:"Auto sync, no pasting",intro:"Add the sync server address once, and the Shortcut sends your data straight to the app. One tap on Sync, or set an Automation to run every morning and the app pulls new data every time you open it.",
- relayLabel:"Sync server address",save:"Save",saved:"Auto sync is on ✦",off:"Auto sync is off",yourURL:"Your personal sync link",copyURL:"Copy link",copied:"Link copied",
- step1:"In the \"Stepdown sync\" Shortcut, delete the <em>Copy to Clipboard</em> action.",
- step2:"Add <em>Get Contents of URL</em> and paste the link above. Tap &gt;, set Method = <em>POST</em>, Request Body = <em>File</em>, and choose the <em>Text</em> variable.",
- step3:"Tap Done, then come back and tap \"Sync now\" in the app. Your iPhone opens the Shortcut; when it finishes, tap ◀ at the top left to come back and your data arrives by itself.",
- auto:"<b>Zero taps:</b> add a Time of Day Automation each morning that runs this Shortcut. The app pulls the latest data every time you open it.",
- privacy:"Your data passes through the server only briefly. It's deleted as soon as the app picks it up, or after 3 days if it doesn't. Your link is a random code, so don't share it.",
- running:"Opening your Shortcut… when it's done, tap ◀ to come back",nothing:"No new data from the Shortcut yet",netErr:"Couldn't reach the sync server. Check your internet or the server address.",on:"Auto sync is on"};
 /* ---------- auto sync through a small relay (no copy and paste) ---------- */
-const RELAY_DEFAULT="";
-function relayURL(){ return ""; }
-function syncCode(){ if(!state.syncCode){ const a=new Uint8Array(20); crypto.getRandomValues(a); state.syncCode=Array.from(a,b=>"abcdefghijkmnpqrstuvwxyz23456789"[b%32]).join(""); save(); } return state.syncCode; }
-function mySyncURL(){ const r=relayURL(); return r?`${r}/s/${syncCode()}`:""; }
-let pulling=false;
-async function pullRelay(quiet){
-  const u=mySyncURL(); if(!u||pulling||!state.profile) return false; pulling=true;
-  try{
-    const res=await fetch(u,{cache:"no-store"});
-    if(res.status===200){ const j=await res.json(); const d=parseSync(j.body);
-      if(d){ const n=importSync(d); fetch(u,{method:"DELETE"}).catch(()=>{}); state.syncPending=0; save(); pulling=false; afterSync(n); return true; }
-      if(!quiet) toast(syncProblem(j.body)); }
-    else if(!quiet) toast(SX.nothing);
-  }catch(e){ if(!quiet) toast(SX.netErr); }
-  pulling=false; return false;
-}
-function pollAfterReturn(){
-  if(!state.syncPending||Date.now()-state.syncPending>5*60e3) return;
-  let tries=0; const tick=async()=>{ if(await pullRelay(true)) return; if(++tries<10) setTimeout(tick,2000); else { state.syncPending=0; save(); toast(SX.nothing); } }; tick();
-}
-function doSync(){
-  // 1) read the clipboard first, inside the tap, exactly like the first version
-  let p=null; try{ if(navigator.clipboard&&navigator.clipboard.readText) p=navigator.clipboard.readText(); }catch(e){}
-  const next=()=>{ if(relayURL()){ state.syncPending=Date.now(); save(); toast(SX.running); setTimeout(()=>{ location.href="shortcuts://run-shortcut?name="+encodeURIComponent("Stepdown sync"); },300); } else doPasteSync(); };
-  if(!p){ next(); return; }
-  p.then(t=>{ const d=parseSync(t); if(d) afterSync(importSync(d)); else next(); }).catch(next);
-}
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ if(state.syncPending) pollAfterReturn(); else pullRelay(true); } });
-function relaySetupHTML(){
-  const r=relayURL();
-  return `<h2 style="margin-top:26px">${SX.title}</h2><p class="legend">${SX.intro}</p>
-    <label>${SX.relayLabel}<input id="relayIn" type="url" inputmode="url" placeholder="https://stepdown-sync.xxxx.workers.dev" value="${escH(r)}"></label>
-    <div class="row" style="margin-top:10px"><button class="btn ghost" id="relaySave">${SX.save}</button></div>
-    ${r?`<p style="margin-top:14px"><b>${SX.yourURL}</b></p><div class="tpl"><code>${escH(mySyncURL())}</code><button class="btn ghost" data-copy-url>${SX.copyURL}</button></div>
-    <ol class="guide"><li>${SX.step1}</li><li>${SX.step2}</li><li>${SX.step3}</li></ol><div class="note">${SX.auto}</div>`:""}
-    <p class="legend" style="margin-top:12px">${SX.privacy}</p>`;
-}
-document.addEventListener("click",e=>{
-  if(e.target.closest("#relaySave")){ state.relay=$("#relayIn").value.trim(); save(); toast(state.relay?SX.saved:SX.off); const g=document.querySelector("#sheet [data-sync-guide]")||null; openSheet(`<div style="text-align:left">${HX.guide}<div class="row"><button class="btn" data-close>${UI.close}</button></div></div>`); renderHealth(); }
-  if(e.target.closest("[data-copy-url]")) copy(mySyncURL(),SX.copied);
-});
 
 const DM={title:"My data",hint:"Everything is stored on this device only. Back it up in case you switch phones or delete the icon.",backup:"Back up my data",restore:"Restore data",reset:"Erase all data"};
 document.addEventListener("click",e=>{
@@ -1662,7 +1530,7 @@ document.addEventListener("click",e=>{
     <p style="margin-top:22px"><button class="linkbtn danger-link" data-reset>${DM.reset}</button></p></div>`); }
   if(e.target.closest("[data-reset]")) $("#resetAll").click();
 });
-const WT={title:"Today's weight",hint:"Weigh in the morning, after the bathroom, before eating. That makes days comparable.",save:"Save",bad:"Enter your weight in kilograms",saved:v=>`Saved ${v} kg ✦`,card:"Weight",avg:(a,n)=>`${a} kg average (${n} days)`,add:"Log weight",edit:"Edit",left:(l,k)=>l>0?`${l} kg to the ${k} kg step`:`You reached the ${k} kg step 🎉`};/* ---------- log weight in the app (always works) ---------- */
+const WT={fromLog:n=>`Average of the ${n} weights you logged`,title:"Today's weight",hint:"Weigh in the morning, after the bathroom, before eating. That makes days comparable.",save:"Save",bad:"Enter your weight in kilograms",saved:v=>`Saved ${v} kg ✦`,card:"Weight",avg:(a,n)=>`${a} kg average (${n} days)`,add:"Log weight",edit:"Edit",left:(l,k)=>l>0?`${l} kg to the ${k} kg step`:`You reached the ${k} kg step 🎉`};/* ---------- log weight in the app (always works) ---------- */
 function weightStore(){ const H=state.health=Object.assign({weight:{},steps:{},water:{},energy:{},lift:{},exercise:{},stand:{}},state.health||{}); return H; }
 function todayWeight(){ return weightStore().weight[dkey()]; }
 function avg7(){ const H=weightStore(), v=[]; for(let i=0;i<7;i++){ const w=H.weight[dkey(addDays(new Date(),-i))]; if(w) v.push(w); } return v.length?{avg:Math.round(avg(v)*10)/10,n:v.length}:null; }
@@ -1693,7 +1561,55 @@ document.addEventListener("click",e=>{ if(e.target.closest("[data-weight]")) ope
 
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-fin]"); if(!b||!state.profile) return;
   state.finisher=b.dataset.fin==="1"; save(); render(); renderToday(); });
-chipify(); load(); hashSync(); setTimeout(()=>{ if(state.syncPending) pollAfterReturn(); else pullRelay(true); },800); window.addEventListener("hashchange",hashSync);
+const LX={lastNone:"not logged yet",last:(k,r)=>`last time ${k} kg × ${r}`,up:k=>`try ${k} kg`,logTitle:n=>`Log ${n}`,
+ kg:"Weight (kg)",reps:"Reps in your last set",save:"Save",saved:"Saved ✦",bodyweight:"For bodyweight moves you can leave the weight at 0.",
+ restStart:s=>`Rest ${s} s`,restLeft:s=>`${s} s left`,restDone:"Rest done, next set 💪",
+ warm:"Warm up 5 min: brisk walk or march in place, then circle your shoulders, hips, and knees",logBtn:"Log"};
+/* ---------- lifting log, progression, rest timer ---------- */
+function liftLog(){ return state.lifts=state.lifts||{}; }
+function topReps(dose){ const m=String(dose).match(/(\d+)\s*[–-]\s*(\d+)\s*$/); return m?+m[2]:null; }
+function stepUp(p){ return p.equip===2?2.5:1; }
+function nextSuggest(p,name,dose){
+  const L=liftLog()[name], t=topReps(dose);
+  if(!L||!t||!L.kg) return null;
+  return L.reps>=t?Math.round((L.kg+stepUp(p))*10)/10:null;
+}
+function exMeta(p,name,dose){
+  const L=liftLog()[name], up=nextSuggest(p,name,dose);
+  if(!L) return `${dose} · ${LX.lastNone}`;
+  return `${dose} · ${LX.last(L.kg,L.reps)}${up?` · ${LX.up(up)}`:""}`;
+}
+function openLog(name,dose){
+  const p=state.profile, L=liftLog()[name]||{}, up=nextSuggest(p,name,dose);
+  openSheet(`<div style="text-align:left"><h2>${LX.logTitle(name)}</h2>
+    <p class="legend">${dose}${up?` · ${LX.up(up)}`:""}</p>
+    <div class="grid"><label>${LX.kg}<input id="lkg" type="number" inputmode="decimal" step="0.5" value="${up||L.kg||""}"></label>
+    <label>${LX.reps}<input id="lreps" type="number" inputmode="numeric" value="${L.reps||""}"></label></div>
+    <p class="legend" style="margin-top:10px">${LX.bodyweight}</p>
+    <div class="row"><button class="btn" id="lsave">${LX.save}</button><button class="btn ghost" data-close>${UI.close}</button></div></div>`);
+  setTimeout(()=>$("#lkg").focus(),300);
+  $("#lsave").onclick=()=>{
+    const kg=parseFloat(String($("#lkg").value).replace(",",".")), reps=parseInt($("#lreps").value,10);
+    liftLog()[name]={kg:isFinite(kg)?kg:0,reps:isFinite(reps)?reps:0,date:dkey()};
+    save(); $("#sheet").classList.add("hidden"); renderToday(); render(); toast(LX.saved);
+  };
+}
+let restT=null;
+function startRest(sec){
+  clearInterval(restT); let left=sec;
+  const el=()=>$("#restBtn");
+  const tick=()=>{ const b=el(); if(!b){ clearInterval(restT); return; }
+    b.textContent=LX.restLeft(left);
+    if(left<=0){ clearInterval(restT); b.textContent=LX.restStart(sec); toast(LX.restDone); return; }
+    left--; };
+  tick(); restT=setInterval(tick,1000);
+}
+document.addEventListener("click",e=>{
+  const l=e.target.closest("[data-log]"); if(l){ openLog(l.dataset.log,l.dataset.dose||""); return; }
+  const r=e.target.closest("#restBtn"); if(r) startRest(90);
+});
+
+chipify(); load();
 if(state.profile){ fillForm(state.profile); syncChips(); show("today"); (window.requestIdleCallback||setTimeout)(()=>{ render(); renderHist(); renderMonths(); checkBadges(); }); }
 else { render(); openOb(); }
 if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
