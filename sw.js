@@ -1,7 +1,7 @@
 // Fast open: pages come from the cache if the network is slow (over 1.2 s),
 // and the newest version is saved in the background for next time.
 // Other files: cache first, refreshed in the background.
-const CACHE = "ladtee-v39";
+const CACHE = "ladtee-v41";
 const SHELL = ["./", "./index.html", "./th.html", "./en.html", "./manifest.webmanifest", "./smile-180.png", "./smile-192.png", "./smile-512.png", "./smile-maskable-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener("activate", e => {
