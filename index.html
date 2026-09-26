@@ -298,6 +298,15 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}.ob-step.on,.sheet-body{animation:none}}
 .ver{text-align:center;margin-top:24px}
+.mealseg{margin-bottom:18px}
+.mealseg>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.mealseg .pill{font-size:13px;padding:8px 12px}
+ul.src{list-style:none;margin:0;padding:0}
+ul.src li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.6}
+ul.src li:last-child{border-bottom:0}
+ul.src b{display:block;font-weight:600;margin-bottom:2px}
+ul.src a{display:inline-block;margin-right:14px;font-size:13.5px;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
 .exrow{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
 .exrow:last-child{border-bottom:0}
 .ck-btn{border:0;background:none;padding:0;cursor:pointer}
@@ -489,10 +498,11 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
       <button id="editProfile">Edit my details and plan</button>
       <button data-mf-edit>My manifests</button>
       <button data-data-menu>My data</button>
+      <button data-sources>Where numbers come from</button>
     </div>
     <button id="shareMe" class="hidden"></button><button id="resetAll" class="hidden"></button>
   </section>
-  <p class="legend ver">Version 41</p>
+  <p class="legend ver">Version 43</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>Today</button>
@@ -521,6 +531,10 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
     </div>
     <div class="ob-step">
       <div class="emo">☀️</div><h1>Your usual day</h1><p class="lead">We'll time your reminders around your real life</p>
+            <label>Do you usually eat breakfast?<select id="bfHabit">
+        <option value="yes" selected>Yes</option>
+        <option value="no">No, or very late</option>
+      </select></label>
       <label>Which sounds most like you?<select id="activity">
         <option value="1.2">Desk job, barely moving</option>
         <option value="1.375" selected>Desk job, exercise 2–3 days</option>
@@ -591,6 +605,7 @@ function fillForm(p){
   $("#goal").value=p.goal; $("#steps").value=p.steps; $("#activity").value=String(p.activity);
   $("#wake").value=p.wake; $("#sleep").value=p.sleep; $("#wtime").value=p.wtime;
   document.querySelectorAll("#days input").forEach(i=>i.checked=p.days.includes(i.value));
+  $("#bfHabit").value=(p.meals||"3s").charAt(0)==="2"?"no":"yes";
   $("#equip").value=String(p.equip); $("#mins").value=String(p.mins); $("#exp").value=p.exp;
   document.querySelectorAll("#flags input").forEach(i=>i.checked=p.flags.includes(i.value));
 }
@@ -682,7 +697,7 @@ function renderProtein(p,c){
   const palm=p=>`≈ ${p} palm${p>1?"s":""}`;
   const ratio=(pp.total/p.goal).toFixed(1);
   $("#protToggle").innerHTML=(hasLift?`<button type="button" data-l="1" aria-pressed="${protLift}">Lifting day</button>`:"")+`<button type="button" data-l="0" aria-pressed="${!protLift}">Rest day</button>`;
-  $("#protein").innerHTML=`<div class="t prot-total"><span>Whole day</span><strong>${pp.total}</strong><small>g, or ${ratio} g per kg of goal weight</small></div>`+
+  $("#protein").innerHTML=`<div class="mealseg"><span>Meal pattern</span><div class="pills">${Object.keys(MEALN).map(k=>`<button class="pill ${(p.meals||"3s")===k?"on":""}" data-meal="${k}">${MEALN[k]}</button>`).join("")}</div></div>`+`<div class="t prot-total"><span>Whole day</span><strong>${pp.total}</strong><small>g, or ${ratio} g per kg of goal weight</small></div>`+
     pp.meals.map(x=>{ const [hm,ap]=fmt12(x.min).split(" ");
       const note=(x.key==="dinner"&&pp.mode==="pre")?PNOTE.dinnerPost:PNOTE[x.key];
       return `<div class="prot-row"><span class="tl-time">${hm}<small>${ap}</small></span><div>
@@ -1125,7 +1140,7 @@ $("#obNext").addEventListener("click",()=>{
 $("#makePlan").addEventListener("click",()=>{
   const p=readForm(), e=validate(p); $("#obErr").textContent=e; if(e) return;
   p.nick=$("#nick").value.trim();
-  const old0=state.profile; p.meals=(old0&&old0.meals)||suggestMeals(p); p.firstMeal=(old0&&old0.firstMeal)||toTime(Math.max(toMin("12:00"),toMin(p.wake)+240));
+  const old0=state.profile; p.meals=(old0&&old0.meals)||($("#bfHabit").value==="no"?"2s":"3s"); p.firstMeal=(old0&&old0.firstMeal)||toTime(Math.max(toMin("12:00"),toMin(p.wake)+240));
   const old=state.profile;
   if(old){ p.startWeight=old.startWeight; p.created=old.created; } else { p.created=Date.now(); state.adj={kcal:0,steps:0}; state.history=[]; }
   p.planWeight=p.weight; state.profile=p; save(); render(); renderHist(); closeOb(); show("today");
@@ -1643,6 +1658,28 @@ function weekMealCheck(p){
 }
 TX.change.meals="Meal pattern";
 document.addEventListener("click",e=>{ if(e.target.closest("[data-meals3]")&&state.profile){ state.profile.meals=(state.profile.meals||"2s").indexOf("s")>0?"3s":"3"; save(); render(); renderToday(); toast("Switched to eating breakfast ✦"); } });
+document.addEventListener("click",e=>{ if(e.target.closest("[data-sources]")) openSheet(`<div style="text-align:left"><h2>Where these numbers come from</h2>
+<p class="legend">Your plan is built on the guidelines and research below. They are population averages, not personal or medical advice.</p>
+<h3>Energy</h3>
+<ul class="src">
+<li><b>BMR formula (Mifflin-St Jeor)</b><a href="https://pubmed.ncbi.nlm.nih.gov/2305711/" target="_blank" rel="noopener">Original 1990 paper</a><a href="https://www.jandonline.org/article/S0002-8223(05)00149-5/abstract" target="_blank" rel="noopener">Review finding it the most accurate</a></li>
+<li><b>About 7,700 kcal per kg of fat</b> is a rough rule. It fits people carrying a lot of fat and overestimates for leaner people.<a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC2376744" target="_blank" rel="noopener">Hall 2008</a></li>
+</ul>
+<h3>Protein</h3>
+<ul class="src">
+<li><b>How much protein with resistance training</b><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5477153/" target="_blank" rel="noopener">ISSN Position Stand 2017</a></li>
+<li><b>No need to fear more than 30 g in one meal</b><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10772463/" target="_blank" rel="noopener">Trommelen 2023</a><a href="https://journals.humankinetics.com/view/journals/ijsnem/34/5/article-p322.xml" target="_blank" rel="noopener">A caution worth reading alongside it</a></li>
+</ul>
+<h3>Exercise</h3>
+<ul class="src">
+<li><b>150–300 min of cardio a week, lifting on 2+ days</b><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7719906/" target="_blank" rel="noopener">WHO 2020 guidelines</a></li>
+<li><b>Max heart rate = 208 − 0.7 × age</b><a href="https://www.jacc.org/doi/10.1016/S0735-1097(00)01054-8" target="_blank" rel="noopener">Tanaka 2001</a></li>
+</ul>
+<h3>Numbers that are common practice</h3>
+<p class="legend">These aren't tied to one specific study: losing 0.5–1% of body weight a week and 1.2–1.6 g of protein per kg of goal weight (following Helms et al. 2014), floors of 1,200 kcal for women and 1,500 kcal for men, 30–35 ml of water per kg of body weight, activity energy estimates, and the protein content of common foods.</p>
+<div class="note">This app is a tracking tool, not medical advice. If you have a medical condition, are pregnant or breastfeeding, or take medication that affects weight or heart rate, check with a doctor before using these numbers.</div><div class="row"><button class="btn ghost" data-close>${UI.close}</button></div></div>`); });
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-meal]"); if(!b||!state.profile) return;
+  state.profile.meals=b.dataset.meal; save(); render(); renderToday(); toast("Meal pattern changed ✦"); });
 chipify(); load();
 if(state.profile){ fillForm(state.profile); syncChips(); show("today"); (window.requestIdleCallback||setTimeout)(()=>{ render(); renderHist(); renderMonths(); checkBadges(); }); }
 else { render(); openOb(); }
