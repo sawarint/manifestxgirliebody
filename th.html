@@ -298,6 +298,10 @@ details.wk summary small{color:var(--muted);font-size:12.5px;text-align:right}
 @keyframes pop{0%{transform:translate(0,0) scale(.6);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.1) rotate(var(--rot));opacity:0}}
 @media (prefers-reduced-motion:reduce){.confetti{display:none}.ob-step.on,.sheet-body{animation:none}}
 .ver{text-align:center;margin-top:24px}
+.phasebox{background:var(--soft);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.phasebox>span{display:block;font:600 14px var(--head);margin-bottom:4px}
+.phasebox p{font-size:13.5px;margin:0 0 6px}
+.phasebox p:last-child{margin:0}
 .mealseg{margin-bottom:18px}
 .mealseg>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:8px}
 .mealseg .pill{font-size:13px;padding:8px 12px}
@@ -502,7 +506,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
     </div>
     <button id="shareMe" class="hidden"></button><button id="resetAll" class="hidden"></button>
   </section>
-  <p class="legend ver">เวอร์ชัน 44</p>
+  <p class="legend ver">เวอร์ชัน 45</p>
 </div>
 <nav class="tabbar" role="tablist">
   <button role="tab" data-tab="today" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>วันนี้</button>
@@ -552,7 +556,7 @@ code{font:12.5px ui-monospace,Menlo,monospace;background:var(--soft);padding:2px
         <option value="0" selected>ดัมเบลที่บ้าน</option><option value="1">ไม่มีอุปกรณ์</option><option value="2">ฟิตเนส / ยิม</option>
       </select></label>
       <label>เวลาต่อครั้ง<select id="mins"><option value="30">30 นาที</option><option value="45" selected>45 นาที</option><option value="60">60 นาที</option></select></label>
-      <label>ประสบการณ์<select id="exp"><option value="new" selected>เพิ่งเริ่ม</option><option value="some">เล่นมาบ้างแล้ว</option></select></label>
+      <label>ตอนนี้ออกกำลังกายแค่ไหน<select id="exp"><option value="none" selected>แทบไม่ได้ออกเลย</option><option value="some">ออกบ้าง ไม่สม่ำเสมอ</option><option value="regular">ออกสม่ำเสมออยู่แล้ว</option></select></label>
       <label>วันที่เล่นได้ (สูงสุด 5 วัน)</label>
       <div class="days" id="days"></div>
       <label style="margin-top:16px">เวลาที่ชอบเล่น<input id="wtime" type="time" value="19:00"></label>
@@ -772,11 +776,11 @@ function finMinsFor(p,key){
 function workoutPlan(p){
   const order=DAYS.map(d=>d[0]).filter(d=>p.days.includes(d));
   const split=SPLIT[Math.min(order.length,5)]||[];
-  const reps=p.exp==="new"?"10–12":"8–12";
+  const reps=(p.exp==="regular")?"8–12":"10–12";
   const lift={};
   order.forEach((d,i)=>{ const key=split[i], [title,keys]=SESS[key];
     const fin=finMinsFor(p,key), lm=Math.max(15,(p.mins||45)-fin);
-    const nEx=lm<=25?4:(lm<=35?4:(lm<=45?5:6)), sets=lm<=25?2:3;
+    const {nEx,sets}=volumeFor(p,lm);
     const seen=new Set(); const ex=[];
     keys.forEach(k=>{ const kk=swapKey(k,p.flags); const name=EX[kk][p.equip]; if(!name||seen.has(name)) return; seen.add(name);
       ex.push({name, dose:`${sets}×${HOLD[kk]||reps}`}); });
@@ -788,7 +792,8 @@ function workoutPlan(p){
 function renderWorkout(p){
   const w=workoutPlan(p), first=Object.keys(w.lift)[0];
   if(!w.count){ $("#workout").innerHTML=`<p>ยังไม่ได้เลือกวันเล่นเวท กลับไปขั้นที่ 1 เพื่อเลือกอย่างน้อย 2 วัน</p>`; return; }
-  $("#workout").innerHTML=DAYS.map(([c,t])=>{
+  const ph=phaseOf(p);
+  $("#workout").innerHTML=`<div class="phasebox"><span>${PX.week(ph.wk)} · ${PX.phase[ph.k]}</span><p>${PX.why[ph.k]}</p><p class="legend">${(p.exp==='regular')?PX.effort:PX.effortNew}</p>${state.volAdj?`<p class="legend">${PX.easier}</p>`:""}</div>`+DAYS.map(([c,t])=>{
     if(w.lift[c]){ const s=w.lift[c];
       return `<details ${first===c?"open":""}><summary><strong>${t}</strong> เวท: ${s.title}</summary>
         <p class="warmline">${LX.warm}</p><ul class="plan">${s.ex.map(e=>`<li><time>${e.dose}</time><div>${e.name}${liftLog()[e.name]?`<br><span class="legend">${LX.last(liftLog()[e.name].kg,liftLog()[e.name].reps)}</span>`:""}</div></li>`).join("")}${(()=>{const cp=cardioPlan(p);return cp.fin[c]?`<li><time>${cp.fin[c]} ${CX.min}</time><div>${CX.finTitle} <span class="legend">${CX.zoneLine(cp)}</span></div></li>`:"";})()}</ul></details>`; }
@@ -977,11 +982,14 @@ function runAnalysis({cur,prev,prevPct,pass,note,sleepHours,steps,lifts}){
   const reached=p.weight<=msBefore;
   if(reached) p.planWeight=p.weight;
   const mc=weekMealCheck(p); if(mc) p.meals=mc.to;
+  const v0=state.volAdj||0;
+  if(lifts!=null&&planned){ if(lifts<=planned-2&&v0===0) state.volAdj=-1; else if(lifts>=planned&&v0<0) state.volAdj=0; }
   const cw=cardioWeekDone(p), cm0=cw.mins;
   if(cw.planned&&cw.n>=cw.planned&&cm0<45){ state.cardio=Object.assign({},state.cardio,{mins:cm0+5}); }
   const c1=calc(p), f=n=>n.toLocaleString(), changes=[];
   if(cardioPlan(p).mins!==cm0) changes.push({k:"cardio",from:cm0,to:cardioPlan(p).mins});
   if(mc) changes.push({k:"meals",from:MEALN[mc.from],to:MEALN[mc.to]});
+  if((state.volAdj||0)!==v0) changes.push({k:"vol",from:v0?PX.cut:PX.restore,to:(state.volAdj||0)?PX.cut:PX.restore});
   if(c1.lo!==c0.lo||c1.hi!==c0.hi) changes.push({k:"kcal",from:`${f(c0.lo)}–${f(c0.hi)}`,to:`${f(c1.lo)}–${f(c1.hi)}`});
   if(c1.steps!==c0.steps) changes.push({k:"steps",from:f(c0.steps),to:f(c1.steps)});
   if(c1.water!==c0.water) changes.push({k:"water",from:(c0.water/1000).toFixed(1),to:(c1.water/1000).toFixed(1)});
@@ -1183,7 +1191,7 @@ function renderToday(){
   $("#protToday").innerHTML=pp.meals.map(m=>`<button class="pill ${d.prot.includes(m.key)?"on":""}" data-pk="${m.key}">${pnameOf(m.key,pp.two)} <b>${m.g}g</b></button>`).join("");
   if(lift){ d.exN=lift.ex.length;
     $("#wkToday").innerHTML=`<div class="cardhead"><h2>${UI.liftToday(lift.short)}</h2><b>${d.ex.length}/${lift.ex.length}</b></div><p class="legend" style="margin-top:-6px">${UI.liftSub(lift.ex.length,p.mins)}<br>${fmt12(toMin(p.wtime))}</p>
-      <p class="warmline">${LX.warm}</p><div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i), L=liftLog()[e.name];
+      <p class="warmline">${LX.warm}</p><p class="warmline">${PX.week(phaseOf(p).wk)} · ${PX.phase[phaseOf(p).k]} · ${(p.exp==="regular")?PX.effort:PX.effortNew}</p><div class="exlist">${lift.ex.map((e,i)=>{ const on=d.ex.includes(i), L=liftLog()[e.name];
         return `<div class="exrow ${on?"on":""}"><button class="ck-btn" data-ex="${i}" aria-pressed="${on}" aria-label="${e.name}"><span class="ck"></span></button><div><b>${e.name}</b><small>${exMeta(p,e.name,e.dose)}</small></div><button class="logchip" data-log="${escH(e.name)}" data-dose="${escH(e.dose)}">${L?`${L.kg} × ${L.reps}`:LX.logBtn}</button></div>`; }).join("")}</div>
       <button class="btn ghost" id="restBtn">${LX.restStart(90)}</button>`; }
   else { d.exN=0; const cp=cardioPlan(p), isC=cp.days.includes(code);
@@ -1687,6 +1695,37 @@ document.addEventListener("click",e=>{ if(e.target.closest("[data-sources]")) op
 <div class="note">แอปนี้เป็นเครื่องมือช่วยติดตาม ไม่ใช่คำแนะนำทางการแพทย์ ถ้ามีโรคประจำตัว ตั้งครรภ์ ให้นมบุตร หรือใช้ยาที่มีผลต่อน้ำหนักหรือชีพจร ควรปรึกษาแพทย์ก่อนใช้ตัวเลขเหล่านี้</div><div class="row"><button class="btn ghost" data-close>${UI.close}</button></div></div>`); });
 document.addEventListener("click",e=>{ const b=e.target.closest("[data-meal]"); if(!b||!state.profile) return;
   state.profile.meals=b.dataset.meal; save(); render(); renderToday(); toast("เปลี่ยนรูปแบบมื้อแล้ว ✦"); });
+const PX={
+ phase:{found:"ช่วงสร้างฐาน",build:"ช่วงเพิ่มขึ้นทีละนิด",full:"ช่วงเต็มแผน",deload:"สัปดาห์พักฟื้น"},
+ week:n=>`สัปดาห์ที่ ${n}`,
+ why:{found:"เริ่มเบาไว้ก่อน เน้นให้ทำครบและจำท่าได้ ยังไม่ต้องหนัก",
+  build:"เพิ่มจำนวนเซ็ตและท่าทีละนิด ร่างกายจะปรับตัวทัน ไม่ปวดจนขี้เกียจไปต่อ",
+  full:"แผนเต็มแล้ว เน้นค่อย ๆ เพิ่มน้ำหนักทีละนิดในแต่ละท่า",
+  deload:"สัปดาห์นี้ลดปริมาณลงหนึ่งเซ็ต ให้ร่างกายฟื้น แล้วสัปดาห์หน้ากลับมาแรงกว่าเดิม"},
+ effortNew:"เลือกน้ำหนักที่ยกจบแล้วยังเหลือแรงอีก 3–4 ครั้ง",
+ effort:"หยุดแต่ละเซ็ตเมื่อเหลือแรงอีกประมาณ 2 ครั้ง",
+ nextUp:"สัปดาห์หน้าจะเพิ่มขึ้นอีกนิด ถ้าสัปดาห์นี้ทำได้ครบ",
+ easier:"สัปดาห์ที่แล้วทำได้ไม่ครบ สัปดาห์นี้ลดให้เหลือท่าน้อยลงหนึ่งท่า จะได้ทำจบจริง",
+ cut:"ลดปริมาณลงให้ทำได้จริง",restore:"กลับมาเต็มแผนแล้ว"};
+
+function trainWeek(){ return ((state.history||[]).length)+1; }
+function phaseOf(p){
+  const wk=trainWeek(), exp=p.exp||"none";
+  if(wk>0&&wk%6===0) return {k:"deload",wk};
+  if(exp==="regular") return {k:"full",wk};
+  if(exp==="some") return {k:wk<=1?"found":(wk<=3?"build":"full"),wk};
+  return {k:wk<=2?"found":(wk<=5?"build":"full"),wk};
+}
+function volumeFor(p,lm){
+  const ph=phaseOf(p).k, adj=state.volAdj||0;
+  let nEx=lm<=25?4:(lm<=35?4:(lm<=45?5:6)), sets=lm<=25?2:3;
+  if(ph==="found"){ nEx=Math.min(nEx,3); sets=2; }
+  else if(ph==="build"){ nEx=Math.min(nEx,4); sets=lm<=35?2:3; }
+  else if(ph==="deload"){ sets=Math.max(2,sets-1); }
+  nEx=Math.max(2,nEx+adj);
+  return {nEx,sets,ph};
+}
+TX.change.vol="ปริมาณเวท";
 chipify(); load();
 if(state.profile){ fillForm(state.profile); syncChips(); show("today"); (window.requestIdleCallback||setTimeout)(()=>{ render(); renderHist(); renderMonths(); checkBadges(); }); }
 else { render(); openOb(); }
